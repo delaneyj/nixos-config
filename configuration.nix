@@ -101,6 +101,9 @@ let
         unstablePkgs.vscode-extensions.mhutchie.git-graph
         unstablePkgs.vscode-extensions.waderyan.gitblame
         unstablePkgs.vscode-extensions.biomejs.biome
+        unstablePkgs.vscode-extensions.arrterian.nix-env-selector
+        unstablePkgs.vscode-extensions.jnoortheen.nix-ide
+        unstablePkgs.vscode-extensions.mkhl.direnv
       ]
       ++ unstablePkgs.vscode-utils.extensionsFromVscodeMarketplace [
         {
@@ -122,10 +125,22 @@ let
           sha256 = "HYJt2E2z64SyZsNrmK8t8npewz3YTfr011sUe5lHLYg=";
         }
         {
+          name = "copilot-chat";
+          publisher = "GitHub";
+          version = "0.44.2";
+          sha256 = "18lpapr3n0kpgrvg20kp8bgg4srmicw11cnf5fwdclmk1rnfjclj";
+        }
+        {
           name = "gitea-vscode";
           publisher = "ijustdev";
           version = "2.1.0";
           sha256 = "+6abVHameFVUJ5lFeS9qzb+XYlhsJV6v05eca4szpU4=";
+        }
+        {
+          name = "nix-extension-pack";
+          publisher = "pinage404";
+          version = "3.0.0";
+          sha256 = "1ndhz51p1fxf42ch1awf7cydi5jryff5v72zckl1mi3j17ldsrbi";
         }
       ];
   };
@@ -135,7 +150,10 @@ let
       "workbench.colorTheme": "Gruvbox Dark Hard",
       "editor.fontFamily": "'Fira Code', monospace",
       "editor.fontLigatures": true,
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
+      "extensions.autoCheckUpdates": false,
+      "extensions.autoUpdate": false,
+      "update.mode": "none"
     }
   '';
 
@@ -325,6 +343,7 @@ in
     (callPackage ./pkgs/codex.nix {})
     discord
     git
+    go
     ghostty
     google-chrome
     jq
