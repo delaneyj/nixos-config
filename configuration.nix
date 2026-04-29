@@ -15,14 +15,25 @@ let
   cosmicScreenshotScript = pkgs.writeShellScript "cosmic-screenshot-save-and-copy" ''
     set -eu
 
-    save_dir="$HOME/Pictures/Screenshots"
-    mkdir -p "$save_dir"
+    pictures_dir="$HOME/Pictures"
+    marker="$(mktemp)"
+    trap 'rm -f "$marker"' EXIT
 
-    filename="Screenshot_$(date +%Y-%m-%d_%H-%M-%S).png"
-    filepath="$save_dir/$filename"
+    ${lib.getExe pkgs.cosmic-screenshot} --interactive=true --modal=true
 
-    ${lib.getExe pkgs.grim} "$filepath"
-    ${lib.getExe' pkgs.wl-clipboard "wl-copy"} --type image/png < "$filepath"
+    for _ in $(seq 1 20); do
+      new_file="$(
+        find "$pictures_dir" -maxdepth 2 -type f -name 'Screenshot_*.png' -newer "$marker" -print \
+          | tail -n 1
+      )"
+
+      if [ -n "$new_file" ] && [ -f "$new_file" ]; then
+        ${lib.getExe' pkgs.wl-clipboard "wl-copy"} --type image/png < "$new_file"
+        exit 0
+      fi
+
+      sleep 0.1
+    done
   '';
 
   cosmicSystemActions = pkgs.writeText "cosmic-system_actions" ''
@@ -354,6 +365,7 @@ in
     slack
     spotify
     vscodePackage
+    wl-clipboard
     zoom-us
   ];
 
