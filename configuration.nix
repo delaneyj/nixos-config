@@ -1,0 +1,408 @@
+# Edit this configuration file to define what should be installed on
+# your system.  Help is available in the configuration.nix(5) man page
+# and in the NixOS manual (accessible by running 'nixos-help').
+
+{ config, pkgs, ... }:
+
+let
+  lib = pkgs.lib;
+  unstablePkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/1c3fe55ad329cbcb28471bb30f05c9827f724c76.tar.gz";
+    sha256 = "1cb124rcycigz060wsix7a9bnyjdgwqns2fynkyfn20jgwxds6kg";
+  }) {
+    config.allowUnfree = true;
+  };
+  cosmicScreenshotScript = pkgs.writeShellScript "cosmic-screenshot-save-and-copy" ''
+    set -eu
+
+    save_dir="$HOME/Pictures/Screenshots"
+    mkdir -p "$save_dir"
+
+    filename="Screenshot_$(date +%Y-%m-%d_%H-%M-%S).png"
+    filepath="$save_dir/$filename"
+
+    ${lib.getExe pkgs.grim} "$filepath"
+    ${lib.getExe' pkgs.wl-clipboard "wl-copy"} --type image/png < "$filepath"
+  '';
+
+  cosmicSystemActions = pkgs.writeText "cosmic-system_actions" ''
+    {
+        /// Opens the application library
+        AppLibrary: "cosmic-app-library",
+        /// Decreases screen brightness
+        BrightnessDown: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon DecreaseDisplayBrightness",
+        /// Increases screen brightness
+        BrightnessUp: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon IncreaseDisplayBrightness",
+        /// Toggles display mode
+        DisplayToggle: "cosmic-osd display",
+        /// Switch between input sources
+        InputSourceSwitch: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon InputSourceSwitch",
+        /// Opens the home folder in a system default file browser
+        HomeFolder: "xdg-open ~",
+        /// Logs out
+        LogOut: "cosmic-osd log-out",
+        /// Decreases keyboard brightness
+        // KeyboardBrightnessDown,
+        /// Increases keyboard brightness
+        // KeyboardBrightnessUp,
+        /// Opens the launcher
+        Launcher: "cosmic-launcher",
+        /// Locks the screen
+        LockScreen: "loginctl lock-session",
+        /// Mutes the active output device
+        Mute: "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        /// Mutes the active microphone
+        MuteMic: "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
+        /// Plays and Pauses audio
+        PlayPause: "playerctl play-pause",
+        /// Goes to the next track
+        PlayNext: "playerctl next",
+        /// Goes to the previous track
+        PlayPrev: "playerctl previous",
+        /// Power off handler
+        PowerOff: "cosmic-osd shutdown",
+        /// Takes a screenshot
+        Screenshot: "${cosmicScreenshotScript}",
+        /// Suspend the system
+        Suspend: "systemctl suspend",
+        /// Opens the system default terminal
+        Terminal: "xdg-terminal-exec",
+        /// Toggles touchpad on/off
+        TouchpadToggle: "cosmic-osd touchpad",
+        /// Lowers the volume of the active output device
+        VolumeLower: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon VolumeDown",
+        /// Raises the volume of the active output device
+        VolumeRaise: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon VolumeUp",
+        /// Opens the system default web browser
+        WebBrowser: "xdg-open http://",
+        /// Opens the (alt+tab) window switcher
+        WindowSwitcher: "cosmic-launcher alt-tab",
+        /// Opens the (alt+shift+tab) window switcher
+        WindowSwitcherPrevious: "cosmic-launcher shift-alt-tab",
+        /// Opens the workspace overview
+        WorkspaceOverview: "cosmic-workspaces",
+    }
+  '';
+
+  cosmicAutotileBehavior = pkgs.writeText "cosmic-autotile_behavior" ''
+    Tiled
+  '';
+
+  ghosttyConfig = pkgs.writeText "ghostty-config" ''
+    theme = Gruvbox Dark
+  '';
+
+  cosCli = pkgs.callPackage ./pkgs/cos-cli.nix { };
+  vscodePackage = unstablePkgs.vscode-with-extensions.override {
+    vscodeExtensions =
+      [
+        unstablePkgs.vscode-extensions.jdinhlife.gruvbox
+        unstablePkgs.vscode-extensions.golang.go
+        unstablePkgs.vscode-extensions.mhutchie.git-graph
+        unstablePkgs.vscode-extensions.waderyan.gitblame
+        unstablePkgs.vscode-extensions.biomejs.biome
+      ]
+      ++ unstablePkgs.vscode-utils.extensionsFromVscodeMarketplace [
+        {
+          name = "protobuf-vsc";
+          publisher = "DrBlury";
+          version = "1.6.6";
+          sha256 = "uMyxdLptaLZBlLEugvYQgJTZCtysmnZix9faXsQfHGk=";
+        }
+        {
+          name = "templ";
+          publisher = "a-h";
+          version = "0.0.35";
+          sha256 = "WIBJorljcnoPUrQCo1eyFb6vQ5lcxV0i+QJlJdzZYE0=";
+        }
+        {
+          name = "vscode-pull-request-github";
+          publisher = "GitHub";
+          version = "0.141.2026042904";
+          sha256 = "HYJt2E2z64SyZsNrmK8t8npewz3YTfr011sUe5lHLYg=";
+        }
+        {
+          name = "gitea-vscode";
+          publisher = "ijustdev";
+          version = "2.1.0";
+          sha256 = "+6abVHameFVUJ5lFeS9qzb+XYlhsJV6v05eca4szpU4=";
+        }
+      ];
+  };
+
+  vscodeSettings = pkgs.writeText "vscode-settings.json" ''
+    {
+      "workbench.colorTheme": "Gruvbox Dark Hard",
+      "editor.fontFamily": "'Fira Code', monospace",
+      "editor.fontLigatures": true,
+      "editor.formatOnSave": true
+    }
+  '';
+
+  cosmicStartupApps = [
+    { command = "${pkgs.ghostty}/bin/ghostty"; appId = "com.mitchellh.ghostty"; workspace = "0"; wait = 20; }
+    { command = "${pkgs.google-chrome}/bin/google-chrome-stable"; appId = "google-chrome"; workspace = "0"; wait = 20; }
+    { command = "${vscodePackage}/bin/code --new-window"; appId = "Code"; workspace = "0"; wait = 20; }
+    { command = "${pkgs.discord}/bin/discord"; appId = "discord"; workspace = "1"; wait = 20; launchDelay = 8; }
+    { command = "${pkgs.spotify}/bin/spotify"; appId = "Spotify"; workspace = "1"; wait = 20; launchDelay = 3; }
+    { command = "${pkgs.slack}/bin/slack"; appId = "Slack"; workspace = "1"; wait = 20; launchDelay = 5; }
+  ];
+
+  cosmicStartupScript = pkgs.writeShellScript "cosmic-startup-apps" ''
+    set -eu
+
+    export PATH=${lib.makeBinPath [ cosCli pkgs.bash pkgs.coreutils ]}
+
+    ${lib.concatMapStringsSep "\n" (app: ''
+      ${app.command} >/dev/null 2>&1 &
+      sleep ${toString (app.launchDelay or 0)}
+      cos-cli move --app-id ${lib.escapeShellArg app.appId} --workspace ${lib.escapeShellArg app.workspace} --wait ${toString (app.wait or 20)} >/dev/null 2>&1 || true
+    '') cosmicStartupApps}
+  '';
+in
+
+{
+  imports =
+    [ # Include the results of the hardware scan.
+      ./hardware-configuration.nix
+    ];
+
+  # Bootloader.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+
+  # Use latest kernel.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  networking.hostName = "nixos"; # Define your hostname.
+  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+
+  # Configure network proxy if necessary
+  # networking.proxy.default = "http://user:password@proxy:port/";
+  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+
+  # Enable networking
+  networking.networkmanager.enable = true;
+
+  # Set your time zone.
+  time.timeZone = "America/Los_Angeles";
+
+  # Select internationalisation properties.
+  i18n.defaultLocale = "en_US.UTF-8";
+
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "en_US.UTF-8";
+    LC_IDENTIFICATION = "en_US.UTF-8";
+    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MONETARY = "en_US.UTF-8";
+    LC_NAME = "en_US.UTF-8";
+    LC_NUMERIC = "en_US.UTF-8";
+    LC_PAPER = "en_US.UTF-8";
+    LC_TELEPHONE = "en_US.UTF-8";
+    LC_TIME = "en_US.UTF-8";
+  };
+
+  # Keep X11 available for apps that still need it.
+  services.xserver.enable = true;
+
+  # Enable the COSMIC greeter and desktop session.
+  services.displayManager.cosmic-greeter.enable = true;
+  services.desktopManager.cosmic.enable = true;
+
+  # Configure keymap in X11
+  services.xserver.xkb = {
+    layout = "us";
+    variant = "colemak";
+  };
+
+  # Enable CUPS to print documents.
+  services.printing.enable = true;
+
+  # Enable sound with pipewire.
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+  };
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  # services.xserver.libinput.enable = true;
+
+  # Define a user account. Don't forget to set a password with 'passwd'.
+  users.users.delaney = {
+    isNormalUser = true;
+    description = "Delaney";
+    extraGroups = [ "networkmanager" "wheel" ];
+    shell = pkgs.fish;
+    packages = with pkgs; [
+    #  thunderbird
+    ];
+  };
+
+  # Install firefox.
+  programs.firefox.enable = true;
+  programs.fish = {
+    enable = true;
+    interactiveShellInit = ''
+      set -l gcr_sock "/run/user/"(id -u)"/gcr/ssh"
+
+      if test -S $gcr_sock
+        if not set -q SSH_AUTH_SOCK; or not test -S "$SSH_AUTH_SOCK"
+          set -gx SSH_AUTH_SOCK $gcr_sock
+        end
+      end
+
+      if set -q SSH_AUTH_SOCK; and test -S "$SSH_AUTH_SOCK"
+        set -l ssh_bootstrap_flag "$XDG_RUNTIME_DIR/fish-ssh-agent-bootstrapped"
+
+        if not test -e $ssh_bootstrap_flag
+          if test -f ~/.ssh/id_rsa
+            ssh-add -l >/dev/null 2>&1
+            if test $status -eq 2
+              ssh-add ~/.ssh/id_rsa </dev/tty >/dev/tty 2>/dev/null
+            end
+          end
+
+          touch $ssh_bootstrap_flag
+        end
+      end
+    '';
+  };
+  programs.git = {
+    enable = true;
+    config = {
+      credential.helper = "cache --timeout=31536000";
+      init.defaultBranch = "main";
+      pull.rebase = false;
+      user = {
+        name = "Delaney Gillilan";
+        email = "delaneygillilan@gmail.com";
+      };
+    };
+  };
+  programs.ssh = {
+    extraConfig = ''
+      AddKeysToAgent yes
+      IdentityFile ~/.ssh/id_rsa
+    '';
+  };
+
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
+
+  fonts.packages = with pkgs; [
+    fira-code
+    fira-code-symbols
+  ];
+
+  environment.shellAliases = {
+    switch-nixos = "$HOME/nixos-config/switch";
+    yolo = "codex --dangerously-bypass-approvals-and-sandbox";
+  };
+
+  environment.variables = {
+    SSH_ASKPASS_REQUIRE = "never";
+    TERMINAL = "ghostty";
+  };
+
+  # List packages installed in system profile. To search, run:
+  # $ nix search wget
+  environment.systemPackages = with pkgs; [
+    btop
+    blender
+    bubblewrap
+    bun
+    cosCli
+    (callPackage ./pkgs/codex.nix {})
+    discord
+    git
+    ghostty
+    google-chrome
+    jq
+    krita
+    nodejs
+    python3
+    ripgrep
+    slack
+    spotify
+    vscodePackage
+    zoom-us
+  ];
+
+  xdg.terminal-exec = {
+    enable = true;
+    settings = {
+      COSMIC = [ "com.mitchellh.ghostty.desktop" ];
+      default = [ "com.mitchellh.ghostty.desktop" ];
+    };
+  };
+
+  systemd.user.services.cosmic-startup-apps = lib.mkIf (cosmicStartupApps != [ ]) {
+    description = "Launch and place apps on COSMIC workspaces";
+    wantedBy = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${cosmicStartupScript}";
+    };
+  };
+
+  system.activationScripts.cosmicUserDefaults.text = ''
+    install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1
+    ln -sfn ${cosmicSystemActions} /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions
+    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions
+
+    install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicComp/v1
+    ln -sfn ${cosmicAutotileBehavior} /home/delaney/.config/cosmic/com.system76.CosmicComp/v1/autotile_behavior
+    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicComp/v1/autotile_behavior
+
+    install -d -m 0755 /home/delaney/.config/ghostty
+    rm -f /home/delaney/.config/ghostty/config
+    ln -sfn ${ghosttyConfig} /home/delaney/.config/ghostty/config
+    chown -h delaney:users /home/delaney/.config/ghostty/config
+
+    install -d -m 0755 /home/delaney/.config/Code/User
+    rm -f /home/delaney/.config/Code/User/settings.json
+    ln -sfn ${vscodeSettings} /home/delaney/.config/Code/User/settings.json
+    chown -h delaney:users /home/delaney/.config/Code/User/settings.json
+  '';
+
+  # Some programs need SUID wrappers, can be configured further or are
+  # started in user sessions.
+  # programs.mtr.enable = true;
+  # programs.gnupg.agent = {
+  #   enable = true;
+  #   enableSSHSupport = true;
+  # };
+
+  # List services that you want to enable:
+
+  # Enable the OpenSSH daemon.
+  # services.openssh.enable = true;
+
+  # Open ports in the firewall.
+  # networking.firewall.allowedTCPPorts = [ ... ];
+  # networking.firewall.allowedUDPPorts = [ ... ];
+  # Or disable the firewall altogether.
+  # networking.firewall.enable = false;
+
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It's perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "25.11"; # Did you read the comment?
+
+}
