@@ -164,6 +164,7 @@ let
       "editor.formatOnSave": true,
       "extensions.autoCheckUpdates": false,
       "extensions.autoUpdate": false,
+      "git.confirmSync": false,
       "json.schemaDownload.trustedDomains": {
         "https://schemastore.azurewebsites.net/": true,
         "https://raw.githubusercontent.com/microsoft/vscode/": true,
