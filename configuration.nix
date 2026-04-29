@@ -361,10 +361,14 @@ in
     blender
     bubblewrap
     bun
+    clang
+    cmake
     cosCli
     (callPackage ./pkgs/codex.nix {})
     discord
+    gcc
     git
+    gnumake
     go
     ghostty
     google-chrome
