@@ -164,6 +164,16 @@ let
       "editor.formatOnSave": true,
       "extensions.autoCheckUpdates": false,
       "extensions.autoUpdate": false,
+      "json.schemaDownload.trustedDomains": {
+        "https://schemastore.azurewebsites.net/": true,
+        "https://raw.githubusercontent.com/microsoft/vscode/": true,
+        "https://raw.githubusercontent.com/devcontainers/spec/": true,
+        "https://www.schemastore.org/": true,
+        "https://json.schemastore.org/": true,
+        "https://json-schema.org/": true,
+        "https://developer.microsoft.com/json-schemas/": true,
+        "https://biomejs.dev": true
+      },
       "update.mode": "none"
     }
   '';
@@ -407,6 +417,14 @@ in
     rm -f /home/delaney/.config/Code/User/settings.json
     ln -sfn ${vscodeSettings} /home/delaney/.config/Code/User/settings.json
     chown -h delaney:users /home/delaney/.config/Code/User/settings.json
+
+    if [ -d /home/delaney/.config/Code/Backups ]; then
+      find /home/delaney/.config/Code/Backups -path '*/vscode-userdata/*' -type f | while read -r backup; do
+        if head -n 1 "$backup" | grep -Fq 'vscode-userdata:/home/delaney/.config/Code/User/settings.json '; then
+          rm -f "$backup"
+        fi
+      done
+    fi
   '';
 
   # Some programs need SUID wrappers, can be configured further or are
