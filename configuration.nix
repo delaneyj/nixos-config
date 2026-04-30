@@ -336,6 +336,11 @@ in
     '';
   };
 
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -362,11 +367,13 @@ in
     bubblewrap
     bun
     clang
+    cloc
     cmake
     cosCli
     (callPackage ./pkgs/codex.nix {})
     discord
     gcc
+    gh
     git
     gnumake
     go
@@ -374,6 +381,7 @@ in
     google-chrome
     jq
     krita
+    nixfmt
     nodejs
     python3
     ripgrep
