@@ -6,12 +6,15 @@
 
 let
   lib = pkgs.lib;
-  unstablePkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/1c3fe55ad329cbcb28471bb30f05c9827f724c76.tar.gz";
-    sha256 = "1cb124rcycigz060wsix7a9bnyjdgwqns2fynkyfn20jgwxds6kg";
-  }) {
-    config.allowUnfree = true;
-  };
+  unstablePkgs =
+    import
+      (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/1c3fe55ad329cbcb28471bb30f05c9827f724c76.tar.gz";
+        sha256 = "1cb124rcycigz060wsix7a9bnyjdgwqns2fynkyfn20jgwxds6kg";
+      })
+      {
+        config.allowUnfree = true;
+      };
   cosmicScreenshotScript = pkgs.writeShellScript "cosmic-screenshot-save-and-copy" ''
     set -eu
 
@@ -99,61 +102,89 @@ let
     Tiled
   '';
 
+  cosmicWallpaper = ./Earth-behind-the-lunar-surface.jpg;
+
+  cosmicBackgroundAll = pkgs.writeText "cosmic-background-all" ''
+    (
+        output: "all",
+        source: Path("${cosmicWallpaper}"),
+        filter_by_theme: true,
+        rotation_frequency: 300,
+        filter_method: Lanczos,
+        scaling_mode: Zoom,
+        sampling_method: Alphanumeric,
+    )
+  '';
+
+  cosmicBackgroundSameOnAll = pkgs.writeText "cosmic-background-same-on-all" ''
+    true
+  '';
+
+  cosmicWallpaperCustomImages = pkgs.writeText "cosmic-wallpaper-custom-images" ''
+    [
+        "${cosmicWallpaper}",
+    ]
+  '';
+
   ghosttyConfig = pkgs.writeText "ghostty-config" ''
     theme = Gruvbox Dark
   '';
 
   cosCli = pkgs.callPackage ./pkgs/cos-cli.nix { };
+  piDev = unstablePkgs.callPackage ./pkgs/pi-dev { };
+  llamaCppVulkan = unstablePkgs.llama-cpp.override {
+    vulkanSupport = true;
+  };
+  stableDiffusionCppVulkan = unstablePkgs.stable-diffusion-cpp-vulkan;
   vscodePackage = unstablePkgs.vscode-with-extensions.override {
-    vscodeExtensions =
-      [
-        unstablePkgs.vscode-extensions.jdinhlife.gruvbox
-        unstablePkgs.vscode-extensions.golang.go
-        unstablePkgs.vscode-extensions.mhutchie.git-graph
-        unstablePkgs.vscode-extensions.waderyan.gitblame
-        unstablePkgs.vscode-extensions.biomejs.biome
-        unstablePkgs.vscode-extensions.arrterian.nix-env-selector
-        unstablePkgs.vscode-extensions.jnoortheen.nix-ide
-        unstablePkgs.vscode-extensions.mkhl.direnv
-      ]
-      ++ unstablePkgs.vscode-utils.extensionsFromVscodeMarketplace [
-        {
-          name = "protobuf-vsc";
-          publisher = "DrBlury";
-          version = "1.6.6";
-          sha256 = "uMyxdLptaLZBlLEugvYQgJTZCtysmnZix9faXsQfHGk=";
-        }
-        {
-          name = "templ";
-          publisher = "a-h";
-          version = "0.0.35";
-          sha256 = "WIBJorljcnoPUrQCo1eyFb6vQ5lcxV0i+QJlJdzZYE0=";
-        }
-        {
-          name = "vscode-pull-request-github";
-          publisher = "GitHub";
-          version = "0.141.2026042904";
-          sha256 = "HYJt2E2z64SyZsNrmK8t8npewz3YTfr011sUe5lHLYg=";
-        }
-        {
-          name = "copilot-chat";
-          publisher = "GitHub";
-          version = "0.44.2";
-          sha256 = "18lpapr3n0kpgrvg20kp8bgg4srmicw11cnf5fwdclmk1rnfjclj";
-        }
-        {
-          name = "gitea-vscode";
-          publisher = "ijustdev";
-          version = "2.1.0";
-          sha256 = "+6abVHameFVUJ5lFeS9qzb+XYlhsJV6v05eca4szpU4=";
-        }
-        {
-          name = "nix-extension-pack";
-          publisher = "pinage404";
-          version = "3.0.0";
-          sha256 = "1ndhz51p1fxf42ch1awf7cydi5jryff5v72zckl1mi3j17ldsrbi";
-        }
-      ];
+    vscodeExtensions = [
+      unstablePkgs.vscode-extensions.jdinhlife.gruvbox
+      unstablePkgs.vscode-extensions.golang.go
+      unstablePkgs.vscode-extensions.mhutchie.git-graph
+      unstablePkgs.vscode-extensions.waderyan.gitblame
+      unstablePkgs.vscode-extensions.biomejs.biome
+      unstablePkgs.vscode-extensions.arrterian.nix-env-selector
+      unstablePkgs.vscode-extensions.jnoortheen.nix-ide
+      unstablePkgs.vscode-extensions.mkhl.direnv
+    ]
+    ++ unstablePkgs.vscode-utils.extensionsFromVscodeMarketplace [
+      {
+        name = "protobuf-vsc";
+        publisher = "DrBlury";
+        version = "1.6.6";
+        sha256 = "uMyxdLptaLZBlLEugvYQgJTZCtysmnZix9faXsQfHGk=";
+      }
+      {
+        name = "templ";
+        publisher = "a-h";
+        version = "0.0.35";
+        sha256 = "WIBJorljcnoPUrQCo1eyFb6vQ5lcxV0i+QJlJdzZYE0=";
+      }
+      {
+        name = "vscode-pull-request-github";
+        publisher = "GitHub";
+        version = "0.141.2026042904";
+        sha256 = "HYJt2E2z64SyZsNrmK8t8npewz3YTfr011sUe5lHLYg=";
+      }
+      {
+        name = "copilot-chat";
+        publisher = "GitHub";
+        version = "0.44.2";
+        sha256 = "18lpapr3n0kpgrvg20kp8bgg4srmicw11cnf5fwdclmk1rnfjclj";
+      }
+      {
+        name = "gitea-vscode";
+        publisher = "ijustdev";
+        version = "2.1.0";
+        sha256 = "+6abVHameFVUJ5lFeS9qzb+XYlhsJV6v05eca4szpU4=";
+      }
+      {
+        name = "nix-extension-pack";
+        publisher = "pinage404";
+        version = "3.0.0";
+        sha256 = "1ndhz51p1fxf42ch1awf7cydi5jryff5v72zckl1mi3j17ldsrbi";
+      }
+    ];
   };
 
   vscodeSettings = pkgs.writeText "vscode-settings.json" ''
@@ -165,6 +196,12 @@ let
       "extensions.autoCheckUpdates": false,
       "extensions.autoUpdate": false,
       "git.confirmSync": false,
+      "git.path": "${pkgs.git}/bin/git",
+      "go.alternateTools": {
+        "go": "${pkgs.go}/bin/go"
+      },
+      "go.goroot": "${pkgs.go}/share/go",
+      "templ.executablePath": "${pkgs.templ}/bin/templ",
       "json.schemaDownload.trustedDomains": {
         "https://schemastore.azurewebsites.net/": true,
         "https://raw.githubusercontent.com/microsoft/vscode/": true,
@@ -180,18 +217,60 @@ let
   '';
 
   cosmicStartupApps = [
-    { command = "${pkgs.ghostty}/bin/ghostty"; appId = "com.mitchellh.ghostty"; workspace = "0"; wait = 20; }
-    { command = "${pkgs.google-chrome}/bin/google-chrome-stable"; appId = "google-chrome"; workspace = "0"; wait = 20; }
-    { command = "${vscodePackage}/bin/code --new-window"; appId = "Code"; workspace = "0"; wait = 20; }
-    { command = "${pkgs.discord}/bin/discord"; appId = "discord"; workspace = "1"; wait = 20; launchDelay = 8; }
-    { command = "${pkgs.spotify}/bin/spotify"; appId = "Spotify"; workspace = "1"; wait = 20; launchDelay = 3; }
-    { command = "${pkgs.slack}/bin/slack"; appId = "Slack"; workspace = "1"; wait = 20; launchDelay = 5; }
+    {
+      command = "${pkgs.ghostty}/bin/ghostty";
+      appId = "com.mitchellh.ghostty";
+      workspace = "0";
+      wait = 20;
+    }
+    {
+      command = "${pkgs.google-chrome}/bin/google-chrome-stable";
+      appId = "google-chrome";
+      workspace = "0";
+      wait = 20;
+    }
+    {
+      command = "${vscodePackage}/bin/code --new-window";
+      appId = "Code";
+      workspace = "0";
+      wait = 20;
+    }
+    {
+      command = "${pkgs.discord}/bin/discord";
+      appId = "discord";
+      workspace = "1";
+      wait = 20;
+      launchDelay = 8;
+    }
+    {
+      command = "${pkgs.spotify}/bin/spotify";
+      appId = "Spotify";
+      workspace = "1";
+      wait = 20;
+      launchDelay = 3;
+    }
+    {
+      command = "${pkgs.slack}/bin/slack";
+      appId = "Slack";
+      workspace = "1";
+      wait = 20;
+      launchDelay = 5;
+    }
   ];
 
   cosmicStartupScript = pkgs.writeShellScript "cosmic-startup-apps" ''
     set -eu
 
-    export PATH=${lib.makeBinPath [ cosCli pkgs.bash pkgs.coreutils ]}
+    export PATH=${
+      lib.makeBinPath [
+        cosCli
+        pkgs.bash
+        pkgs.coreutils
+        pkgs.git
+        pkgs.go
+        pkgs.templ
+      ]
+    }:$PATH
 
     ${lib.concatMapStringsSep "\n" (app: ''
       ${app.command} >/dev/null 2>&1 &
@@ -202,10 +281,10 @@ let
 in
 
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -281,10 +360,13 @@ in
   users.users.delaney = {
     isNormalUser = true;
     description = "Delaney";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
     shell = pkgs.fish;
     packages = with pkgs; [
-    #  thunderbird
+      #  thunderbird
     ];
   };
 
@@ -344,17 +426,24 @@ in
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
+
   fonts.packages = with pkgs; [
     fira-code
     fira-code-symbols
   ];
 
   environment.shellAliases = {
+    sd = "sd-cli";
     switch-nixos = "$HOME/nixos-config/switch";
     yolo = "codex --dangerously-bypass-approvals-and-sandbox";
   };
 
   environment.variables = {
+    BROWSER = "${pkgs.google-chrome}/bin/google-chrome-stable";
     SSH_ASKPASS_REQUIRE = "never";
     TERMINAL = "ghostty";
   };
@@ -364,13 +453,14 @@ in
   environment.systemPackages = with pkgs; [
     btop
     blender
+    brotli
     bubblewrap
     bun
     clang
     cloc
     cmake
     cosCli
-    (callPackage ./pkgs/codex.nix {})
+    (callPackage ./pkgs/codex.nix { })
     discord
     gcc
     gh
@@ -379,25 +469,47 @@ in
     go
     ghostty
     google-chrome
+    imagemagick
     jq
     krita
+    llamaCppVulkan
     nixfmt
     nodejs
+    pciutils
+    piDev
     python3
+    python313Packages.huggingface-hub
     ripgrep
     slack
     spotify
+    stableDiffusionCppVulkan
+    templ
+    vulkan-tools
     vscodePackage
     wl-clipboard
     zoom-us
   ];
 
-  xdg.terminal-exec = {
-    enable = true;
-    settings = {
-      COSMIC = [ "com.mitchellh.ghostty.desktop" ];
-      default = [ "com.mitchellh.ghostty.desktop" ];
+  xdg = {
+    terminal-exec = {
+      enable = true;
+      settings = {
+        COSMIC = [ "com.mitchellh.ghostty.desktop" ];
+        default = [ "com.mitchellh.ghostty.desktop" ];
+      };
     };
+
+    mime = {
+      defaultApplications = {
+        "text/html" = "google-chrome.desktop";
+        "x-scheme-handler/http" = "google-chrome.desktop";
+        "x-scheme-handler/https" = "google-chrome.desktop";
+      };
+    };
+
+    # COSMIC portal OpenURI currently returns success without opening Chrome.
+    # Let xdg-open use mime defaults directly instead.
+    portal.xdgOpenUsePortal = false;
   };
 
   systemd.user.services.cosmic-startup-apps = lib.mkIf (cosmicStartupApps != [ ]) {
@@ -421,6 +533,16 @@ in
     ln -sfn ${cosmicAutotileBehavior} /home/delaney/.config/cosmic/com.system76.CosmicComp/v1/autotile_behavior
     chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicComp/v1/autotile_behavior
 
+    install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1
+    ln -sfn ${cosmicBackgroundAll} /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1/all
+    ln -sfn ${cosmicBackgroundSameOnAll} /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1/same-on-all
+    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1/all
+    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1/same-on-all
+
+    install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicSettings.Wallpaper/v1
+    ln -sfn ${cosmicWallpaperCustomImages} /home/delaney/.config/cosmic/com.system76.CosmicSettings.Wallpaper/v1/custom-images
+    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicSettings.Wallpaper/v1/custom-images
+
     install -d -m 0755 /home/delaney/.config/ghostty
     rm -f /home/delaney/.config/ghostty/config
     ln -sfn ${ghosttyConfig} /home/delaney/.config/ghostty/config
@@ -430,6 +552,10 @@ in
     rm -f /home/delaney/.config/Code/User/settings.json
     ln -sfn ${vscodeSettings} /home/delaney/.config/Code/User/settings.json
     chown -h delaney:users /home/delaney/.config/Code/User/settings.json
+
+    install -d -m 0755 -o delaney -g users /home/delaney/go/bin
+    ln -sfn ${pkgs.templ}/bin/templ /home/delaney/go/bin/templ
+    chown -h delaney:users /home/delaney/go/bin/templ
 
     if [ -d /home/delaney/.config/Code/Backups ]; then
       find /home/delaney/.config/Code/Backups -path '*/vscode-userdata/*' -type f | while read -r backup; do

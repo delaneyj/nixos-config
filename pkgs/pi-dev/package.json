@@ -1,0 +1,7 @@
+{
+  "name": "pi-dev",
+  "version": "0.71.1",
+  "dependencies": {
+    "@mariozechner/pi-coding-agent": "0.71.1"
+  }
+}
