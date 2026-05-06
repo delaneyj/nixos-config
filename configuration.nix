@@ -136,7 +136,7 @@ let
     vulkanSupport = true;
   };
   stableDiffusionCppVulkan = unstablePkgs.stable-diffusion-cpp-vulkan;
-  vscodePackage = unstablePkgs.vscode-with-extensions.override {
+  vscodePackageBase = unstablePkgs.vscode-with-extensions.override {
     vscodeExtensions = [
       unstablePkgs.vscode-extensions.jdinhlife.gruvbox
       unstablePkgs.vscode-extensions.golang.go
@@ -186,6 +186,49 @@ let
       }
     ];
   };
+  vscodePackage = pkgs.runCommand "vscode-home-extensions-${lib.getVersion vscodePackageBase}" { } ''
+    mkdir -p "$out"
+    cp -a ${vscodePackageBase}/. "$out/"
+    chmod -R u+w "$out"
+    rm -f "$out/bin/code"
+    base_ext_dir="$(${pkgs.gnused}/bin/sed -n 's/.*--extensions-dir \([^ ]*\).*/\1/p' ${vscodePackageBase}/bin/code | ${pkgs.coreutils}/bin/head -n 1)"
+    cat > "$out/bin/code" <<'EOF'
+#!@BASH@
+set -euo pipefail
+base_ext_dir="@BASE_EXT_DIR@"
+ext_dir="''${VSCODE_EXTENSIONS:-$HOME/.vscode/extensions}"
+mkdir -p "$ext_dir"
+if [ -d "$base_ext_dir" ]; then
+  for src in "$base_ext_dir"/*; do
+    [ -d "$src" ] || continue
+    name="$(basename "$src")"
+    target="$ext_dir/$name"
+    if [ -L "$target" ] && [ "$(readlink "$target")" != "$src" ]; then
+      ln -sfn "$src" "$target"
+    elif [ ! -e "$target" ]; then
+      ln -s "$src" "$target"
+    fi
+  done
+fi
+if [ -f "$base_ext_dir/extensions.json" ]; then
+  home_json="$ext_dir/extensions.json"
+  tmp_json="$ext_dir/.extensions.json.$$"
+  if [ -f "$home_json" ]; then
+    @JQ@ -s 'add | unique_by(.identifier.id)' "$base_ext_dir/extensions.json" "$home_json" > "$tmp_json"
+  else
+    cp "$base_ext_dir/extensions.json" "$tmp_json"
+  fi
+  mv "$tmp_json" "$home_json"
+fi
+exec @VSCODE@ "$@" --extensions-dir "$ext_dir"
+EOF
+    substituteInPlace "$out/bin/code" \
+      --replace-fail @BASH@ ${pkgs.bash}/bin/bash \
+      --replace-fail @BASE_EXT_DIR@ "$base_ext_dir" \
+      --replace-fail @JQ@ ${pkgs.jq}/bin/jq \
+      --replace-fail @VSCODE@ ${unstablePkgs.vscode}/bin/code
+    chmod +x "$out/bin/code"
+  '';
 
   vscodeSettings = pkgs.writeText "vscode-settings.json" ''
     {
