@@ -255,6 +255,12 @@ EOF
         "https://developer.microsoft.com/json-schemas/": true,
         "https://biomejs.dev": true
       },
+      "terminal.integrated.defaultProfile.linux": "fish",
+      "terminal.integrated.profiles.linux": {
+        "fish": {
+          "path": "${pkgs.fish}/bin/fish"
+        }
+      },
       "update.mode": "none"
     }
   '';
