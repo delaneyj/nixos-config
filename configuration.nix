@@ -339,10 +339,12 @@ in
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # Use ZFS-compatible LTS kernel.
+  boot.kernelPackages = pkgs.linuxPackages_6_12;
+  boot.supportedFilesystems = [ "zfs" ];
 
   networking.hostName = "nixos"; # Define your hostname.
+  networking.hostId = "aa44369d"; # Required for ZFS pool imports.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -385,6 +387,9 @@ in
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+
+  services.zfs.autoScrub.enable = true;
+  services.zfs.trim.enable = true;
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
@@ -522,6 +527,7 @@ in
     jq
     krita
     llamaCppVulkan
+    ngrok
     nixfmt
     nodejs
     pciutils
@@ -537,6 +543,8 @@ in
     vscodePackage
     wl-clipboard
     zoom-us
+    zstd
+    config.boot.zfs.package
   ];
 
   xdg = {
