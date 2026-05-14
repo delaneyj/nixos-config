@@ -385,6 +385,17 @@ in
     variant = "colemak";
   };
 
+  services.keyd = {
+    enable = true;
+    keyboards.default = {
+      ids = [ "*" ];
+      settings = {
+        main.rightcontrol = "layer(rightcontrol)";
+        "rightcontrol:C".right = "nextsong";
+      };
+    };
+  };
+
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
