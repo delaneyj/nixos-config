@@ -15,6 +15,7 @@ let
       {
         config.allowUnfree = true;
       };
+  handyFlake = builtins.getFlake "github:cjpais/Handy/a385371c32613c1ec2649a4f51522a7ddefb5d4c";
   cosmicScreenshotScript = pkgs.writeShellScript "cosmic-screenshot-save-and-copy" ''
     set -eu
 
@@ -102,6 +103,113 @@ let
     Tiled
   '';
 
+  cosmicCustomShortcuts = pkgs.writeText "cosmic-shortcuts-custom" ''
+    {
+        (modifiers: [], key: "F24"): System(PlayNext),
+    }
+  '';
+
+  zoomAwareBrowser = pkgs.writeShellApplication {
+    name = "zoom-aware-browser";
+    text = ''
+      first="''${1:-}"
+
+      case "$first" in
+        https://zoom.us/j/*|http://zoom.us/j/*|https://*.zoom.us/j/*|http://*.zoom.us/j/*)
+          without_fragment="''${first%%#*}"
+          path_query="''${without_fragment#*://*/j/}"
+          meeting_id="''${path_query%%[?/#]*}"
+          query=""
+          password=""
+
+          case "$without_fragment" in
+            *\?*) query="''${without_fragment#*\?}" ;;
+          esac
+
+          if [ -n "$query" ]; then
+            IFS='&' read -r -a query_pairs <<< "$query"
+            for pair in "''${query_pairs[@]}"; do
+              case "$pair" in
+                pwd=*) password="''${pair#pwd=}" ;;
+              esac
+            done
+          fi
+
+          if [ -n "$meeting_id" ]; then
+            zoom_url="zoommtg://zoom.us/join?action=join&confno=$meeting_id"
+            if [ -n "$password" ]; then
+              zoom_url="$zoom_url&pwd=$password"
+            fi
+
+            exec ${lib.getExe pkgs.zoom-us} "$zoom_url"
+          fi
+          ;;
+      esac
+
+      exec ${pkgs.google-chrome}/bin/google-chrome-stable "$@"
+    '';
+  };
+
+  zoomAwareBrowserDesktop = pkgs.makeDesktopItem {
+    name = "zoom-aware-browser";
+    desktopName = "Zoom-aware browser";
+    exec = "${lib.getExe zoomAwareBrowser} %U";
+    mimeTypes = [
+      "text/html"
+      "x-scheme-handler/http"
+      "x-scheme-handler/https"
+    ];
+    categories = [
+      "Network"
+      "WebBrowser"
+    ];
+  };
+
+  browserXdgOpen = pkgs.writeShellApplication {
+    name = "xdg-open";
+    text = ''
+      case "''${1:-}" in
+        http://*|https://*) exec ${lib.getExe zoomAwareBrowser} "$@" ;;
+      esac
+
+      exec ${lib.getExe' pkgs.xdg-utils "xdg-open"} "$@"
+    '';
+  };
+
+  discordPackage =
+    pkgs.runCommand "discord-browser-aware-${lib.getVersion pkgs.discord}"
+      { nativeBuildInputs = [ pkgs.makeWrapper ]; }
+      ''
+        mkdir -p "$out"
+        cp -aL ${pkgs.discord}/. "$out/"
+        chmod -R u+w "$out"
+
+        wrapProgram "$out/bin/Discord" \
+          --prefix PATH : ${
+            lib.makeBinPath [
+              browserXdgOpen
+              pkgs.xdg-utils
+            ]
+          } \
+          --set BROWSER ${lib.getExe zoomAwareBrowser} \
+          --set GTK_USE_PORTAL 0 \
+          --suffix XDG_DATA_DIRS : /run/current-system/sw/share
+
+        wrapProgram "$out/bin/discord" \
+          --prefix PATH : ${
+            lib.makeBinPath [
+              browserXdgOpen
+              pkgs.xdg-utils
+            ]
+          } \
+          --set BROWSER ${lib.getExe zoomAwareBrowser} \
+          --set GTK_USE_PORTAL 0 \
+          --suffix XDG_DATA_DIRS : /run/current-system/sw/share
+
+        substituteInPlace "$out/share/applications/discord.desktop" \
+          --replace-fail 'Exec=Discord' "Exec=$out/bin/Discord"
+      '';
+
   cosmicWallpaper = ./Earth-behind-the-lunar-surface.jpg;
 
   cosmicBackgroundAll = pkgs.writeText "cosmic-background-all" ''
@@ -126,12 +234,48 @@ let
     ]
   '';
 
+  ghosttyBellSound = pkgs.runCommand "ghostty-bell.wav" { nativeBuildInputs = [ pkgs.python3 ]; } ''
+        python3 -c '
+    import math, os, struct, wave
+
+    sample_rate = 44100
+    samples = int(sample_rate * 0.18)
+    with wave.open(os.environ["out"], "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(sample_rate)
+        frames = bytearray()
+        for i in range(samples):
+            value = int(22000 * math.sin(2 * math.pi * 880 * i / sample_rate))
+            frames.extend(struct.pack("<h", value))
+        wav.writeframes(frames)
+    '
+  '';
+
   ghosttyConfig = pkgs.writeText "ghostty-config" ''
     theme = Gruvbox Dark
+    bell-features = audio
+    bell-audio-path = ${ghosttyBellSound}
+    bell-audio-volume = 1.0
+  '';
+
+  piBellOnDoneExtension = pkgs.writeText "bell-on-done.ts" ''
+    import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+    import { spawn } from "node:child_process";
+
+    export default function (pi: ExtensionAPI) {
+      pi.on("agent_end", async () => {
+        spawn("${lib.getExe' pkgs.pulseaudio "paplay"}", ["${ghosttyBellSound}"], {
+          detached: true,
+          stdio: "ignore",
+        }).unref();
+      });
+    }
   '';
 
   cosCli = pkgs.callPackage ./pkgs/cos-cli.nix { };
   piDev = unstablePkgs.callPackage ./pkgs/pi-dev { };
+  rtk = pkgs.callPackage ./pkgs/rtk.nix { };
   llamaCppVulkan = unstablePkgs.llama-cpp.override {
     vulkanSupport = true;
   };
@@ -187,47 +331,47 @@ let
     ];
   };
   vscodePackage = pkgs.runCommand "vscode-home-extensions-${lib.getVersion vscodePackageBase}" { } ''
-    mkdir -p "$out"
-    cp -a ${vscodePackageBase}/. "$out/"
-    chmod -R u+w "$out"
-    rm -f "$out/bin/code"
-    base_ext_dir="$(${pkgs.gnused}/bin/sed -n 's/.*--extensions-dir \([^ ]*\).*/\1/p' ${vscodePackageBase}/bin/code | ${pkgs.coreutils}/bin/head -n 1)"
-    cat > "$out/bin/code" <<'EOF'
-#!@BASH@
-set -euo pipefail
-base_ext_dir="@BASE_EXT_DIR@"
-ext_dir="''${VSCODE_EXTENSIONS:-$HOME/.vscode/extensions}"
-mkdir -p "$ext_dir"
-if [ -d "$base_ext_dir" ]; then
-  for src in "$base_ext_dir"/*; do
-    [ -d "$src" ] || continue
-    name="$(basename "$src")"
-    target="$ext_dir/$name"
-    if [ -L "$target" ] && [ "$(readlink "$target")" != "$src" ]; then
-      ln -sfn "$src" "$target"
-    elif [ ! -e "$target" ]; then
-      ln -s "$src" "$target"
+        mkdir -p "$out"
+        cp -a ${vscodePackageBase}/. "$out/"
+        chmod -R u+w "$out"
+        rm -f "$out/bin/code"
+        base_ext_dir="$(${pkgs.gnused}/bin/sed -n 's/.*--extensions-dir \([^ ]*\).*/\1/p' ${vscodePackageBase}/bin/code | ${pkgs.coreutils}/bin/head -n 1)"
+        cat > "$out/bin/code" <<'EOF'
+    #!@BASH@
+    set -euo pipefail
+    base_ext_dir="@BASE_EXT_DIR@"
+    ext_dir="''${VSCODE_EXTENSIONS:-$HOME/.vscode/extensions}"
+    mkdir -p "$ext_dir"
+    if [ -d "$base_ext_dir" ]; then
+      for src in "$base_ext_dir"/*; do
+        [ -d "$src" ] || continue
+        name="$(basename "$src")"
+        target="$ext_dir/$name"
+        if [ -L "$target" ] && [ "$(readlink "$target")" != "$src" ]; then
+          ln -sfn "$src" "$target"
+        elif [ ! -e "$target" ]; then
+          ln -s "$src" "$target"
+        fi
+      done
     fi
-  done
-fi
-if [ -f "$base_ext_dir/extensions.json" ]; then
-  home_json="$ext_dir/extensions.json"
-  tmp_json="$ext_dir/.extensions.json.$$"
-  if [ -f "$home_json" ]; then
-    @JQ@ -s 'add | unique_by(.identifier.id)' "$base_ext_dir/extensions.json" "$home_json" > "$tmp_json"
-  else
-    cp "$base_ext_dir/extensions.json" "$tmp_json"
-  fi
-  mv "$tmp_json" "$home_json"
-fi
-exec @VSCODE@ "$@" --extensions-dir "$ext_dir"
-EOF
-    substituteInPlace "$out/bin/code" \
-      --replace-fail @BASH@ ${pkgs.bash}/bin/bash \
-      --replace-fail @BASE_EXT_DIR@ "$base_ext_dir" \
-      --replace-fail @JQ@ ${pkgs.jq}/bin/jq \
-      --replace-fail @VSCODE@ ${unstablePkgs.vscode}/bin/code
-    chmod +x "$out/bin/code"
+    if [ -f "$base_ext_dir/extensions.json" ]; then
+      home_json="$ext_dir/extensions.json"
+      tmp_json="$ext_dir/.extensions.json.$$"
+      if [ -f "$home_json" ]; then
+        @JQ@ -s 'add | unique_by(.identifier.id)' "$base_ext_dir/extensions.json" "$home_json" > "$tmp_json"
+      else
+        cp "$base_ext_dir/extensions.json" "$tmp_json"
+      fi
+      mv "$tmp_json" "$home_json"
+    fi
+    exec @VSCODE@ "$@" --extensions-dir "$ext_dir"
+    EOF
+        substituteInPlace "$out/bin/code" \
+          --replace-fail @BASH@ ${pkgs.bash}/bin/bash \
+          --replace-fail @BASE_EXT_DIR@ "$base_ext_dir" \
+          --replace-fail @JQ@ ${pkgs.jq}/bin/jq \
+          --replace-fail @VSCODE@ ${unstablePkgs.vscode}/bin/code
+        chmod +x "$out/bin/code"
   '';
 
   vscodeSettings = pkgs.writeText "vscode-settings.json" ''
@@ -285,7 +429,7 @@ EOF
       wait = 20;
     }
     {
-      command = "${pkgs.discord}/bin/discord";
+      command = "${discordPackage}/bin/discord";
       appId = "discord";
       workspace = "1";
       wait = 20;
@@ -333,6 +477,7 @@ in
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    handyFlake.nixosModules.default
   ];
 
   # Bootloader.
@@ -391,13 +536,43 @@ in
       ids = [ "*" ];
       settings = {
         main.rightcontrol = "layer(rightcontrol)";
-        "rightcontrol:C".right = "nextsong";
+        "rightcontrol:C".right = "f24";
       };
     };
   };
 
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
+  # Enable CUPS and Brother network printer support.
+  services.printing = {
+    enable = true;
+    browsing = true;
+    drivers = with pkgs; [
+      brgenml1cupswrapper
+      brgenml1lpr
+      brlaser
+      gutenprint
+    ];
+    webInterface = true;
+  };
+
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
+  services.nats.enable = true;
+
+  hardware.printers = {
+    ensureDefaultPrinter = "Brother_MFC_L8900CDW";
+    ensurePrinters = [
+      {
+        name = "Brother_MFC_L8900CDW";
+        description = "Brother MFC-L8900CDW series";
+        deviceUri = "dnssd://Brother%20MFC-L8900CDW%20series._ipp._tcp.local/?uuid=e3248000-80ce-11db-8000-b42200d9be4a";
+        model = "everywhere";
+      }
+    ];
+  };
 
   services.zfs.autoScrub.enable = true;
   services.zfs.trim.enable = true;
@@ -426,6 +601,7 @@ in
     isNormalUser = true;
     description = "Delaney";
     extraGroups = [
+      "input"
       "networkmanager"
       "wheel"
     ];
@@ -488,6 +664,8 @@ in
     nix-direnv.enable = true;
   };
 
+  programs.handy.enable = true;
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -524,9 +702,10 @@ in
     clang
     cloc
     cmake
+    compsize
     cosCli
     (callPackage ./pkgs/codex.nix { })
-    discord
+    discordPackage
     gcc
     gh
     git
@@ -535,25 +714,35 @@ in
     ghostty
     google-chrome
     imagemagick
+    impression
     jq
     krita
     llamaCppVulkan
+    nats-server
+    natscli
     ngrok
     nixfmt
     nodejs
     pciutils
     piDev
+    pv
     python3
     python313Packages.huggingface-hub
     ripgrep
+    rtk
     slack
     spotify
+    sqlite
+    sqlitebrowser
     stableDiffusionCppVulkan
+    system-config-printer
     templ
     vulkan-tools
     vscodePackage
     wl-clipboard
+    wtype
     zoom-us
+    zoomAwareBrowserDesktop
     zstd
     config.boot.zfs.package
   ];
@@ -569,9 +758,11 @@ in
 
     mime = {
       defaultApplications = {
-        "text/html" = "google-chrome.desktop";
-        "x-scheme-handler/http" = "google-chrome.desktop";
-        "x-scheme-handler/https" = "google-chrome.desktop";
+        "text/html" = "zoom-aware-browser.desktop";
+        "x-scheme-handler/http" = "zoom-aware-browser.desktop";
+        "x-scheme-handler/https" = "zoom-aware-browser.desktop";
+        "x-scheme-handler/zoommtg" = "Zoom.desktop";
+        "x-scheme-handler/zoomus" = "Zoom.desktop";
       };
     };
 
@@ -592,10 +783,24 @@ in
     };
   };
 
+  system.activationScripts.rtkGlobalInit = {
+    deps = [ "users" ];
+    text = ''
+      if [ -d /home/delaney ]; then
+        install -d -m 0755 -o delaney -g users /home/delaney/.claude /home/delaney/.config
+        ${lib.getExe' pkgs.util-linux "runuser"} -u delaney -- \
+          env HOME=/home/delaney XDG_CONFIG_HOME=/home/delaney/.config \
+          ${lib.getExe rtk} init -g --auto-patch
+      fi
+    '';
+  };
+
   system.activationScripts.cosmicUserDefaults.text = ''
     install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1
     ln -sfn ${cosmicSystemActions} /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions
+    ln -sfn ${cosmicCustomShortcuts} /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom
     chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions
+    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom
 
     install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicComp/v1
     ln -sfn ${cosmicAutotileBehavior} /home/delaney/.config/cosmic/com.system76.CosmicComp/v1/autotile_behavior
@@ -615,6 +820,11 @@ in
     rm -f /home/delaney/.config/ghostty/config
     ln -sfn ${ghosttyConfig} /home/delaney/.config/ghostty/config
     chown -h delaney:users /home/delaney/.config/ghostty/config
+
+    install -d -m 0755 /home/delaney/.pi/agent/extensions
+    rm -f /home/delaney/.pi/agent/extensions/bell-on-done.ts
+    ln -sfn ${piBellOnDoneExtension} /home/delaney/.pi/agent/extensions/bell-on-done.ts
+    chown -h delaney:users /home/delaney/.pi/agent/extensions/bell-on-done.ts
 
     install -d -m 0755 /home/delaney/.config/Code/User
     rm -f /home/delaney/.config/Code/User/settings.json
