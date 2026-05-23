@@ -835,6 +835,7 @@ in
     templ
     terminalDictate
     terminalDictateToggle
+    upx
     vulkan-tools
     vscodePackage
     wl-clipboard
