@@ -6,6 +6,101 @@
 
 let
   lib = pkgs.lib;
+  whisperBaseEnModel = pkgs.fetchurl {
+    url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
+    hash = "sha256-oDd5yG3zMjB19eeWyyzlAp8A7Ihp7uP9+4l6/jbG0AI=";
+  };
+
+  terminalDictate = pkgs.writeShellApplication {
+    name = "terminal-dictate";
+    runtimeInputs = with pkgs; [
+      coreutils
+      ffmpeg
+      gnused
+      whisper-cpp
+      wl-clipboard
+      wtype
+    ];
+    text = ''
+      set -eu
+
+      dur="''${1:-8}"
+      tmp="$(mktemp -d)"
+      trap 'rm -rf "$tmp"' EXIT
+
+      ffmpeg -hide_banner -loglevel error \
+        -f pulse -i default \
+        -t "$dur" \
+        -ar 16000 -ac 1 \
+        "$tmp/in.wav"
+
+      whisper-cli \
+        -m ${whisperBaseEnModel} \
+        -f "$tmp/in.wav" \
+        -nt -np -otxt -of "$tmp/out" >/dev/null
+
+      text="$(tr '\n' ' ' < "$tmp/out.txt" | sed 's/^ *//; s/ *$//')"
+
+      printf '%s' "$text" | wl-copy
+      wtype "$text"
+    '';
+  };
+
+  terminalDictateToggle = pkgs.writeShellApplication {
+    name = "terminal-dictate-toggle";
+    runtimeInputs = with pkgs; [
+      coreutils
+      ffmpeg
+      gnused
+      procps
+      whisper-cpp
+      wl-clipboard
+      wtype
+    ];
+    text = ''
+      set -eu
+
+      state_dir="''${XDG_RUNTIME_DIR:-/tmp}/terminal-dictate"
+      pid_file="$state_dir/ffmpeg.pid"
+      wav_file="$state_dir/in.wav"
+      out_file="$state_dir/out"
+
+      mkdir -p "$state_dir"
+
+      if [ -s "$pid_file" ]; then
+        pid="$(cat "$pid_file")"
+        rm -f "$pid_file"
+
+        if ps -p "$pid" >/dev/null 2>&1; then
+          kill -INT "$pid" >/dev/null 2>&1 || true
+          for _ in $(seq 1 50); do
+            ps -p "$pid" >/dev/null 2>&1 || break
+            sleep 0.1
+          done
+        fi
+
+        whisper-cli \
+          -m ${whisperBaseEnModel} \
+          -f "$wav_file" \
+          -nt -np -otxt -of "$out_file" >/dev/null
+
+        text="$(tr '\n' ' ' < "$out_file.txt" | sed 's/^ *//; s/ *$//')"
+        rm -f "$wav_file" "$out_file.txt"
+
+        printf '%s' "$text" | wl-copy
+        wtype "$text"
+        exit 0
+      fi
+
+      rm -f "$wav_file" "$out_file.txt"
+      ffmpeg -hide_banner -loglevel error \
+        -f pulse -i default \
+        -ar 16000 -ac 1 \
+        "$wav_file" &
+      printf '%s' "$!" > "$pid_file"
+    '';
+  };
+
   unstablePkgs =
     import
       (builtins.fetchTarball {
@@ -106,6 +201,7 @@ let
   cosmicCustomShortcuts = pkgs.writeText "cosmic-shortcuts-custom" ''
     {
         (modifiers: [], key: "F24"): System(PlayNext),
+        (modifiers: [Super, Ctrl], key: "space"): Spawn("${lib.getExe terminalDictateToggle}"),
     }
   '';
 
@@ -737,6 +833,8 @@ in
     stableDiffusionCppVulkan
     system-config-printer
     templ
+    terminalDictate
+    terminalDictateToggle
     vulkan-tools
     vscodePackage
     wl-clipboard
