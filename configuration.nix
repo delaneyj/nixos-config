@@ -479,6 +479,7 @@ let
       "extensions.autoCheckUpdates": false,
       "extensions.autoUpdate": false,
       "git.confirmSync": false,
+      "explorer.confirmDelete": false,
       "git.path": "${pkgs.git}/bin/git",
       "go.alternateTools": {
         "go": "${pkgs.go}/bin/go"
