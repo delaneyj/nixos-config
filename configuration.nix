@@ -827,6 +827,7 @@ in
     python313Packages.huggingface-hub
     ripgrep
     rtk
+    simplescreenrecorder
     slack
     spotify
     sqlite
