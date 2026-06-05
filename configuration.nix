@@ -698,6 +698,7 @@ in
     isNormalUser = true;
     description = "Delaney";
     extraGroups = [
+      "dialout"
       "input"
       "networkmanager"
       "wheel"
@@ -808,6 +809,7 @@ in
     git
     gnumake
     go
+    gopls
     ghostty
     google-chrome
     imagemagick
@@ -820,6 +822,7 @@ in
     ngrok
     nixfmt
     nodejs
+    obs-studio
     pciutils
     piDev
     pv
@@ -827,7 +830,6 @@ in
     python313Packages.huggingface-hub
     ripgrep
     rtk
-    simplescreenrecorder
     slack
     spotify
     sqlite
@@ -838,6 +840,7 @@ in
     terminalDictate
     terminalDictateToggle
     upx
+    vlc
     vulkan-tools
     vscodePackage
     wl-clipboard
