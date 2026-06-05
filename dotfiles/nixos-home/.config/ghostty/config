@@ -1,0 +1,4 @@
+theme = Gruvbox Dark
+bell-features = audio
+bell-audio-path = /home/delaney/.local/share/sounds/ghostty-bell.wav
+bell-audio-volume = 1.0

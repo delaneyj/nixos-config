@@ -1,0 +1,33 @@
+{
+  "workbench.colorTheme": "Gruvbox Dark Hard",
+  "editor.fontFamily": "'Fira Code', monospace",
+  "editor.fontLigatures": true,
+  "editor.formatOnSave": true,
+  "extensions.autoCheckUpdates": false,
+  "extensions.autoUpdate": false,
+  "git.confirmSync": false,
+  "explorer.confirmDelete": false,
+  "git.path": "/run/current-system/sw/bin/git",
+  "go.alternateTools": {
+    "go": "/run/current-system/sw/bin/go",
+    "gopls": "/run/current-system/sw/bin/gopls"
+  },
+  "templ.executablePath": "/run/current-system/sw/bin/templ",
+  "json.schemaDownload.trustedDomains": {
+    "https://schemastore.azurewebsites.net/": true,
+    "https://raw.githubusercontent.com/microsoft/vscode/": true,
+    "https://raw.githubusercontent.com/devcontainers/spec/": true,
+    "https://www.schemastore.org/": true,
+    "https://json.schemastore.org/": true,
+    "https://json-schema.org/": true,
+    "https://developer.microsoft.com/json-schemas/": true,
+    "https://biomejs.dev": true
+  },
+  "terminal.integrated.defaultProfile.linux": "fish",
+  "terminal.integrated.profiles.linux": {
+    "fish": {
+      "path": "/run/current-system/sw/bin/fish"
+    }
+  },
+  "update.mode": "none"
+}

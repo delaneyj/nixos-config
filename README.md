@@ -7,7 +7,9 @@ Machine-level NixOS configuration for this system lives here.
 - [configuration.nix](/home/delaney/nixos-config/configuration.nix:1): main system configuration
 - [hardware-configuration.nix](/home/delaney/nixos-config/hardware-configuration.nix:1): hardware-generated settings
 - [pkgs](/home/delaney/nixos-config/pkgs): custom packages used by the system config
-- [switch](/home/delaney/nixos-config/switch:1): local wrapper for `nixos-rebuild switch`
+- [switch](/home/delaney/nixos-config/switch:1): local wrapper for `nixos-rebuild switch` plus Stow dotfiles
+- [dotfiles/nixos-home](/home/delaney/nixos-config/dotfiles/nixos-home): GNU Stow package linked into `$HOME`
+- [apply-dotfiles](/home/delaney/nixos-config/apply-dotfiles:1): safe Stow wrapper with conflict backups
 
 ## Apply Config Changes
 
@@ -17,17 +19,20 @@ Use the local wrapper:
 ~/nixos-config/switch
 ```
 
-Or, if your shell has been rebuilt with the alias from `configuration.nix`:
+Or, after dotfiles have been stowed, use the fish alias:
 
 ```bash
 switch-nixos
 ```
 
-The wrapper runs:
+The wrapper runs the rebuild, then restows user dotfiles:
 
 ```bash
 sudo nixos-rebuild switch -I nixos-config=$HOME/nixos-config/configuration.nix
+~/nixos-config/apply-dotfiles ~/nixos-config
 ```
+
+If an existing target conflicts with a Stow-managed file, it is moved to `~/.dotfiles-backup/<timestamp>/` before linking.
 
 ## Validate Before Switching
 
@@ -86,7 +91,7 @@ This config also manages some session-level behavior:
 
 - `PrintScreen` is rebound to a wrapper that saves screenshots to `~/Pictures/Screenshots` and copies the image to the Wayland clipboard
 - startup apps are launched and moved onto COSMIC workspaces by the `cosmic-startup-apps` user service
-- Ghostty and VS Code user config files are linked into `~/.config` via activation scripts
+- Ghostty, VS Code, COSMIC, fish, Git, SSH, MIME, Pi extension, and small Go tool shims are linked into `$HOME` via Stow after `switch`
 
 If startup workspace placement changes, inspect the live session with:
 

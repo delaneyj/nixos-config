@@ -1,0 +1,12 @@
+[credential]
+	helper = cache --timeout=31536000
+[init]
+	defaultBranch = main
+[pull]
+	rebase = false
+[user]
+	name = Delaney Gillilan
+	email = delaneygillilan@gmail.com
+[credential "https://git.stellarcorps.dev"]
+	helper =
+	helper = !tea login helper

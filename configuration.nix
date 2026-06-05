@@ -111,99 +111,38 @@ let
         config.allowUnfree = true;
       };
   handyFlake = builtins.getFlake "github:cjpais/Handy/a385371c32613c1ec2649a4f51522a7ddefb5d4c";
-  cosmicScreenshotScript = pkgs.writeShellScript "cosmic-screenshot-save-and-copy" ''
-    set -eu
+  cosmicScreenshotSaveAndCopy = pkgs.writeShellApplication {
+    name = "cosmic-screenshot-save-and-copy";
+    runtimeInputs = with pkgs; [
+      coreutils
+      cosmic-screenshot
+      findutils
+      wl-clipboard
+    ];
+    text = ''
+      set -eu
 
-    pictures_dir="$HOME/Pictures"
-    marker="$(mktemp)"
-    trap 'rm -f "$marker"' EXIT
+      pictures_dir="$HOME/Pictures"
+      marker="$(mktemp)"
+      trap 'rm -f "$marker"' EXIT
 
-    ${lib.getExe pkgs.cosmic-screenshot} --interactive=true --modal=true
+      cosmic-screenshot --interactive=true --modal=true
 
-    for _ in $(seq 1 20); do
-      new_file="$(
-        find "$pictures_dir" -maxdepth 2 -type f -name 'Screenshot_*.png' -newer "$marker" -print \
-          | tail -n 1
-      )"
+      for _ in $(seq 1 20); do
+        new_file="$(
+          find "$pictures_dir" -maxdepth 2 -type f -name 'Screenshot_*.png' -newer "$marker" -print \
+            | tail -n 1
+        )"
 
-      if [ -n "$new_file" ] && [ -f "$new_file" ]; then
-        ${lib.getExe' pkgs.wl-clipboard "wl-copy"} --type image/png < "$new_file"
-        exit 0
-      fi
+        if [ -n "$new_file" ] && [ -f "$new_file" ]; then
+          wl-copy --type image/png < "$new_file"
+          exit 0
+        fi
 
-      sleep 0.1
-    done
-  '';
-
-  cosmicSystemActions = pkgs.writeText "cosmic-system_actions" ''
-    {
-        /// Opens the application library
-        AppLibrary: "cosmic-app-library",
-        /// Decreases screen brightness
-        BrightnessDown: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon DecreaseDisplayBrightness",
-        /// Increases screen brightness
-        BrightnessUp: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon IncreaseDisplayBrightness",
-        /// Toggles display mode
-        DisplayToggle: "cosmic-osd display",
-        /// Switch between input sources
-        InputSourceSwitch: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon InputSourceSwitch",
-        /// Opens the home folder in a system default file browser
-        HomeFolder: "xdg-open ~",
-        /// Logs out
-        LogOut: "cosmic-osd log-out",
-        /// Decreases keyboard brightness
-        // KeyboardBrightnessDown,
-        /// Increases keyboard brightness
-        // KeyboardBrightnessUp,
-        /// Opens the launcher
-        Launcher: "cosmic-launcher",
-        /// Locks the screen
-        LockScreen: "loginctl lock-session",
-        /// Mutes the active output device
-        Mute: "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
-        /// Mutes the active microphone
-        MuteMic: "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
-        /// Plays and Pauses audio
-        PlayPause: "playerctl play-pause",
-        /// Goes to the next track
-        PlayNext: "playerctl next",
-        /// Goes to the previous track
-        PlayPrev: "playerctl previous",
-        /// Power off handler
-        PowerOff: "cosmic-osd shutdown",
-        /// Takes a screenshot
-        Screenshot: "${cosmicScreenshotScript}",
-        /// Suspend the system
-        Suspend: "systemctl suspend",
-        /// Opens the system default terminal
-        Terminal: "xdg-terminal-exec",
-        /// Toggles touchpad on/off
-        TouchpadToggle: "cosmic-osd touchpad",
-        /// Lowers the volume of the active output device
-        VolumeLower: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon VolumeDown",
-        /// Raises the volume of the active output device
-        VolumeRaise: "busctl --user call com.system76.CosmicSettingsDaemon /com/system76/CosmicSettingsDaemon com.system76.CosmicSettingsDaemon VolumeUp",
-        /// Opens the system default web browser
-        WebBrowser: "xdg-open http://",
-        /// Opens the (alt+tab) window switcher
-        WindowSwitcher: "cosmic-launcher alt-tab",
-        /// Opens the (alt+shift+tab) window switcher
-        WindowSwitcherPrevious: "cosmic-launcher shift-alt-tab",
-        /// Opens the workspace overview
-        WorkspaceOverview: "cosmic-workspaces",
-    }
-  '';
-
-  cosmicAutotileBehavior = pkgs.writeText "cosmic-autotile_behavior" ''
-    Tiled
-  '';
-
-  cosmicCustomShortcuts = pkgs.writeText "cosmic-shortcuts-custom" ''
-    {
-        (modifiers: [], key: "F24"): System(PlayNext),
-        (modifiers: [Super, Ctrl], key: "space"): Spawn("${lib.getExe terminalDictateToggle}"),
-    }
-  '';
+        sleep 0.1
+      done
+    '';
+  };
 
   zoomAwareBrowser = pkgs.writeShellApplication {
     name = "zoom-aware-browser";
@@ -306,69 +245,6 @@ let
           --replace-fail 'Exec=Discord' "Exec=$out/bin/Discord"
       '';
 
-  cosmicWallpaper = ./Earth-behind-the-lunar-surface.jpg;
-
-  cosmicBackgroundAll = pkgs.writeText "cosmic-background-all" ''
-    (
-        output: "all",
-        source: Path("${cosmicWallpaper}"),
-        filter_by_theme: true,
-        rotation_frequency: 300,
-        filter_method: Lanczos,
-        scaling_mode: Zoom,
-        sampling_method: Alphanumeric,
-    )
-  '';
-
-  cosmicBackgroundSameOnAll = pkgs.writeText "cosmic-background-same-on-all" ''
-    true
-  '';
-
-  cosmicWallpaperCustomImages = pkgs.writeText "cosmic-wallpaper-custom-images" ''
-    [
-        "${cosmicWallpaper}",
-    ]
-  '';
-
-  ghosttyBellSound = pkgs.runCommand "ghostty-bell.wav" { nativeBuildInputs = [ pkgs.python3 ]; } ''
-        python3 -c '
-    import math, os, struct, wave
-
-    sample_rate = 44100
-    samples = int(sample_rate * 0.18)
-    with wave.open(os.environ["out"], "wb") as wav:
-        wav.setnchannels(1)
-        wav.setsampwidth(2)
-        wav.setframerate(sample_rate)
-        frames = bytearray()
-        for i in range(samples):
-            value = int(22000 * math.sin(2 * math.pi * 880 * i / sample_rate))
-            frames.extend(struct.pack("<h", value))
-        wav.writeframes(frames)
-    '
-  '';
-
-  ghosttyConfig = pkgs.writeText "ghostty-config" ''
-    theme = Gruvbox Dark
-    bell-features = audio
-    bell-audio-path = ${ghosttyBellSound}
-    bell-audio-volume = 1.0
-  '';
-
-  piBellOnDoneExtension = pkgs.writeText "bell-on-done.ts" ''
-    import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-    import { spawn } from "node:child_process";
-
-    export default function (pi: ExtensionAPI) {
-      pi.on("agent_end", async () => {
-        spawn("${lib.getExe' pkgs.pulseaudio "paplay"}", ["${ghosttyBellSound}"], {
-          detached: true,
-          stdio: "ignore",
-        }).unref();
-      });
-    }
-  '';
-
   cosCli = pkgs.callPackage ./pkgs/cos-cli.nix { };
   piDev = unstablePkgs.callPackage ./pkgs/pi-dev { };
   rtk = pkgs.callPackage ./pkgs/rtk.nix { };
@@ -468,42 +344,6 @@ let
           --replace-fail @JQ@ ${pkgs.jq}/bin/jq \
           --replace-fail @VSCODE@ ${unstablePkgs.vscode}/bin/code
         chmod +x "$out/bin/code"
-  '';
-
-  vscodeSettings = pkgs.writeText "vscode-settings.json" ''
-    {
-      "workbench.colorTheme": "Gruvbox Dark Hard",
-      "editor.fontFamily": "'Fira Code', monospace",
-      "editor.fontLigatures": true,
-      "editor.formatOnSave": true,
-      "extensions.autoCheckUpdates": false,
-      "extensions.autoUpdate": false,
-      "git.confirmSync": false,
-      "explorer.confirmDelete": false,
-      "git.path": "${pkgs.git}/bin/git",
-      "go.alternateTools": {
-        "go": "${pkgs.go}/bin/go"
-      },
-      "go.goroot": "${pkgs.go}/share/go",
-      "templ.executablePath": "${pkgs.templ}/bin/templ",
-      "json.schemaDownload.trustedDomains": {
-        "https://schemastore.azurewebsites.net/": true,
-        "https://raw.githubusercontent.com/microsoft/vscode/": true,
-        "https://raw.githubusercontent.com/devcontainers/spec/": true,
-        "https://www.schemastore.org/": true,
-        "https://json.schemastore.org/": true,
-        "https://json-schema.org/": true,
-        "https://developer.microsoft.com/json-schemas/": true,
-        "https://biomejs.dev": true
-      },
-      "terminal.integrated.defaultProfile.linux": "fish",
-      "terminal.integrated.profiles.linux": {
-        "fish": {
-          "path": "${pkgs.fish}/bin/fish"
-        }
-      },
-      "update.mode": "none"
-    }
   '';
 
   cosmicStartupApps = [
@@ -711,51 +551,8 @@ in
 
   # Install firefox.
   programs.firefox.enable = true;
-  programs.fish = {
-    enable = true;
-    interactiveShellInit = ''
-      set -l gcr_sock "/run/user/"(id -u)"/gcr/ssh"
-
-      if test -S $gcr_sock
-        if not set -q SSH_AUTH_SOCK; or not test -S "$SSH_AUTH_SOCK"
-          set -gx SSH_AUTH_SOCK $gcr_sock
-        end
-      end
-
-      if set -q SSH_AUTH_SOCK; and test -S "$SSH_AUTH_SOCK"
-        set -l ssh_bootstrap_flag "$XDG_RUNTIME_DIR/fish-ssh-agent-bootstrapped"
-
-        if not test -e $ssh_bootstrap_flag
-          if test -f ~/.ssh/id_rsa
-            ssh-add -l >/dev/null 2>&1
-            if test $status -eq 2
-              ssh-add ~/.ssh/id_rsa </dev/tty >/dev/tty 2>/dev/null
-            end
-          end
-
-          touch $ssh_bootstrap_flag
-        end
-      end
-    '';
-  };
-  programs.git = {
-    enable = true;
-    config = {
-      credential.helper = "cache --timeout=31536000";
-      init.defaultBranch = "main";
-      pull.rebase = false;
-      user = {
-        name = "Delaney Gillilan";
-        email = "delaneygillilan@gmail.com";
-      };
-    };
-  };
-  programs.ssh = {
-    extraConfig = ''
-      AddKeysToAgent yes
-      IdentityFile ~/.ssh/id_rsa
-    '';
-  };
+  programs.fish.enable = true;
+  programs.git.enable = true;
 
   programs.direnv = {
     enable = true;
@@ -777,12 +574,6 @@ in
     fira-code-symbols
   ];
 
-  environment.shellAliases = {
-    sd = "sd-cli";
-    switch-nixos = "$HOME/nixos-config/switch";
-    yolo = "codex --dangerously-bypass-approvals-and-sandbox";
-  };
-
   environment.variables = {
     BROWSER = "${pkgs.google-chrome}/bin/google-chrome-stable";
     SSH_ASKPASS_REQUIRE = "never";
@@ -802,6 +593,7 @@ in
     cmake
     compsize
     cosCli
+    cosmicScreenshotSaveAndCopy
     (callPackage ./pkgs/codex.nix { })
     discordPackage
     gcc
@@ -825,6 +617,7 @@ in
     obs-studio
     pciutils
     piDev
+    pulseaudio
     pv
     python3
     python313Packages.huggingface-hub
@@ -835,6 +628,7 @@ in
     sqlite
     sqlitebrowser
     stableDiffusionCppVulkan
+    stow
     system-config-printer
     templ
     terminalDictate
@@ -851,29 +645,9 @@ in
     config.boot.zfs.package
   ];
 
-  xdg = {
-    terminal-exec = {
-      enable = true;
-      settings = {
-        COSMIC = [ "com.mitchellh.ghostty.desktop" ];
-        default = [ "com.mitchellh.ghostty.desktop" ];
-      };
-    };
-
-    mime = {
-      defaultApplications = {
-        "text/html" = "zoom-aware-browser.desktop";
-        "x-scheme-handler/http" = "zoom-aware-browser.desktop";
-        "x-scheme-handler/https" = "zoom-aware-browser.desktop";
-        "x-scheme-handler/zoommtg" = "Zoom.desktop";
-        "x-scheme-handler/zoomus" = "Zoom.desktop";
-      };
-    };
-
-    # COSMIC portal OpenURI currently returns success without opening Chrome.
-    # Let xdg-open use mime defaults directly instead.
-    portal.xdgOpenUsePortal = false;
-  };
+  # COSMIC portal OpenURI currently returns success without opening Chrome.
+  # Let xdg-open use mime defaults directly instead.
+  xdg.portal.xdgOpenUsePortal = false;
 
   systemd.user.services.cosmic-startup-apps = lib.mkIf (cosmicStartupApps != [ ]) {
     description = "Launch and place apps on COSMIC workspaces";
@@ -898,55 +672,6 @@ in
       fi
     '';
   };
-
-  system.activationScripts.cosmicUserDefaults.text = ''
-    install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1
-    ln -sfn ${cosmicSystemActions} /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions
-    ln -sfn ${cosmicCustomShortcuts} /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom
-    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/system_actions
-    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom
-
-    install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicComp/v1
-    ln -sfn ${cosmicAutotileBehavior} /home/delaney/.config/cosmic/com.system76.CosmicComp/v1/autotile_behavior
-    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicComp/v1/autotile_behavior
-
-    install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1
-    ln -sfn ${cosmicBackgroundAll} /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1/all
-    ln -sfn ${cosmicBackgroundSameOnAll} /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1/same-on-all
-    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1/all
-    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicBackground/v1/same-on-all
-
-    install -d -m 0755 /home/delaney/.config/cosmic/com.system76.CosmicSettings.Wallpaper/v1
-    ln -sfn ${cosmicWallpaperCustomImages} /home/delaney/.config/cosmic/com.system76.CosmicSettings.Wallpaper/v1/custom-images
-    chown -h delaney:users /home/delaney/.config/cosmic/com.system76.CosmicSettings.Wallpaper/v1/custom-images
-
-    install -d -m 0755 /home/delaney/.config/ghostty
-    rm -f /home/delaney/.config/ghostty/config
-    ln -sfn ${ghosttyConfig} /home/delaney/.config/ghostty/config
-    chown -h delaney:users /home/delaney/.config/ghostty/config
-
-    install -d -m 0755 /home/delaney/.pi/agent/extensions
-    rm -f /home/delaney/.pi/agent/extensions/bell-on-done.ts
-    ln -sfn ${piBellOnDoneExtension} /home/delaney/.pi/agent/extensions/bell-on-done.ts
-    chown -h delaney:users /home/delaney/.pi/agent/extensions/bell-on-done.ts
-
-    install -d -m 0755 /home/delaney/.config/Code/User
-    rm -f /home/delaney/.config/Code/User/settings.json
-    ln -sfn ${vscodeSettings} /home/delaney/.config/Code/User/settings.json
-    chown -h delaney:users /home/delaney/.config/Code/User/settings.json
-
-    install -d -m 0755 -o delaney -g users /home/delaney/go/bin
-    ln -sfn ${pkgs.templ}/bin/templ /home/delaney/go/bin/templ
-    chown -h delaney:users /home/delaney/go/bin/templ
-
-    if [ -d /home/delaney/.config/Code/Backups ]; then
-      find /home/delaney/.config/Code/Backups -path '*/vscode-userdata/*' -type f | while read -r backup; do
-        if head -n 1 "$backup" | grep -Fq 'vscode-userdata:/home/delaney/.config/Code/User/settings.json '; then
-          rm -f "$backup"
-        fi
-      done
-    fi
-  '';
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

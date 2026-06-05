@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="${1:-$HOME/nixos-config}"
+stow_dir="$repo_dir/dotfiles"
+package="nixos-home"
+target_dir="$HOME"
+package_dir="$stow_dir/$package"
+
+if [[ ! -d "$package_dir" ]]; then
+  echo "missing stow package: $package_dir" >&2
+  exit 1
+fi
+
+if [[ -x /run/current-system/sw/bin/stow ]]; then
+  stow_bin=/run/current-system/sw/bin/stow
+elif command -v stow >/dev/null 2>&1; then
+  stow_bin="$(command -v stow)"
+else
+  echo "missing stow; rebuild after adding pkgs.stow or install it first" >&2
+  exit 1
+fi
+
+timestamp="$(date +%Y%m%d-%H%M%S)-$$"
+backup_root="$HOME/.dotfiles-backup/$timestamp"
+made_backup=0
+
+while IFS= read -r -d '' source_path; do
+  rel_path="${source_path#"$package_dir/"}"
+  target_path="$target_dir/$rel_path"
+
+  [[ -e "$target_path" || -L "$target_path" ]] || continue
+
+  source_real="$(readlink -f "$source_path" 2>/dev/null || true)"
+  target_real="$(readlink -f "$target_path" 2>/dev/null || true)"
+
+  if [[ -n "$source_real" && "$source_real" == "$target_real" ]]; then
+    continue
+  fi
+
+  install -d "$(dirname "$backup_root/$rel_path")"
+  mv "$target_path" "$backup_root/$rel_path"
+  made_backup=1
+done < <(find "$package_dir" \( -type f -o -type l \) -print0)
+
+"$stow_bin" --restow --no-folding --dir="$stow_dir" --target="$target_dir" "$package"
+
+if [[ -d "$HOME/.ssh" ]]; then
+  chmod 700 "$HOME/.ssh"
+fi
+
+if [[ -d "$HOME/.config/Code/Backups" ]]; then
+  while IFS= read -r backup; do
+    if head -n 1 "$backup" | grep -Fq 'vscode-userdata:/home/delaney/.config/Code/User/settings.json '; then
+      rm -f "$backup"
+    fi
+  done < <(find "$HOME/.config/Code/Backups" -path '*/vscode-userdata/*' -type f)
+fi
+
+if [[ "$made_backup" -eq 1 ]]; then
+  echo "backed up pre-stow files to $backup_root"
+fi
