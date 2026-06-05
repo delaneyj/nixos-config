@@ -24,26 +24,51 @@ fi
 timestamp="$(date +%Y%m%d-%H%M%S)-$$"
 backup_root="$HOME/.dotfiles-backup/$timestamp"
 made_backup=0
+backup_conflicts() {
+  local attempt="$1"
 
-while IFS= read -r -d '' source_path; do
-  rel_path="${source_path#"$package_dir/"}"
-  target_path="$target_dir/$rel_path"
+  while IFS= read -r -d '' source_path; do
+    rel_path="${source_path#"$package_dir/"}"
+    target_path="$target_dir/$rel_path"
 
-  [[ -e "$target_path" || -L "$target_path" ]] || continue
+    [[ -e "$target_path" || -L "$target_path" ]] || continue
 
-  source_real="$(readlink -f "$source_path" 2>/dev/null || true)"
-  target_real="$(readlink -f "$target_path" 2>/dev/null || true)"
+    source_real="$(readlink -f "$source_path" 2>/dev/null || true)"
+    target_real="$(readlink -f "$target_path" 2>/dev/null || true)"
 
-  if [[ -n "$source_real" && "$source_real" == "$target_real" ]]; then
-    continue
+    if [[ -n "$source_real" && "$source_real" == "$target_real" ]]; then
+      continue
+    fi
+
+    backup_path="$backup_root/$rel_path"
+    if [[ -e "$backup_path" || -L "$backup_path" ]]; then
+      backup_path="$backup_path.$attempt"
+    fi
+
+    install -d "$(dirname "$backup_path")"
+    mv "$target_path" "$backup_path"
+    made_backup=1
+  done < <(find "$package_dir" \( -type f -o -type l \) -print0)
+}
+
+stow_output=""
+stow_ok=0
+for attempt in {1..10}; do
+  backup_conflicts "$attempt"
+
+  if stow_output="$("$stow_bin" --restow --no-folding --dir="$stow_dir" --target="$target_dir" "$package" 2>&1)"; then
+    stow_ok=1
+    break
   fi
 
-  install -d "$(dirname "$backup_root/$rel_path")"
-  mv "$target_path" "$backup_root/$rel_path"
-  made_backup=1
-done < <(find "$package_dir" \( -type f -o -type l \) -print0)
+  sleep 0.2
+done
 
-"$stow_bin" --restow --no-folding --dir="$stow_dir" --target="$target_dir" "$package"
+if [[ "$stow_ok" -ne 1 ]]; then
+  printf '%s\n' "$stow_output" >&2
+  echo "failed to stow $package after retries" >&2
+  exit 1
+fi
 
 if [[ -d "$HOME/.ssh" ]]; then
   chmod 700 "$HOME/.ssh"
