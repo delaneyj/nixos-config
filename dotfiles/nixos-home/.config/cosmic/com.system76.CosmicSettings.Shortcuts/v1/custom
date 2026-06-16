@@ -1,4 +1,5 @@
 {
     (modifiers: [], key: "F24"): System(PlayNext),
+    (modifiers: [Super], key: "t"): Spawn("/run/current-system/sw/bin/ghostty"),
     (modifiers: [Super, Ctrl], key: "space"): Spawn("/run/current-system/sw/bin/terminal-dictate-toggle"),
 }

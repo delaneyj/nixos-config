@@ -110,7 +110,6 @@ let
       {
         config.allowUnfree = true;
       };
-  handyFlake = builtins.getFlake "github:cjpais/Handy/a385371c32613c1ec2649a4f51522a7ddefb5d4c";
   cosmicScreenshotSaveAndCopy = pkgs.writeShellApplication {
     name = "cosmic-screenshot-save-and-copy";
     runtimeInputs = with pkgs; [
@@ -414,7 +413,6 @@ in
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    handyFlake.nixosModules.default
   ];
 
   # Bootloader.
@@ -559,8 +557,6 @@ in
     nix-direnv.enable = true;
   };
 
-  programs.handy.enable = true;
-
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -615,6 +611,7 @@ in
     nixfmt
     nodejs
     obs-studio
+    openssl
     pciutils
     piDev
     pulseaudio
