@@ -7,10 +7,28 @@ package="nixos-home"
 target_dir="$HOME"
 package_dir="$stow_dir/$package"
 
+sync_pi_skills() {
+  local skills_src="$HOME/.pi/agent/skills"
+  local skills_dst="$package_dir/.pi/agent/skills"
+
+  [[ -d "$skills_src" ]] || return 0
+
+  mkdir -p "$skills_dst"
+  (
+    cd "$skills_src"
+    tar --dereference --create --file - .
+  ) | (
+    cd "$skills_dst"
+    tar --extract --file -
+  )
+}
+
 if [[ ! -d "$package_dir" ]]; then
   echo "missing stow package: $package_dir" >&2
   exit 1
 fi
+
+sync_pi_skills
 
 if [[ -x /run/current-system/sw/bin/stow ]]; then
   stow_bin=/run/current-system/sw/bin/stow

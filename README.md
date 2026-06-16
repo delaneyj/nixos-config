@@ -7,9 +7,15 @@ Machine-level NixOS configuration for this system lives here.
 - [configuration.nix](/home/delaney/nixos-config/configuration.nix:1): shared system configuration
 - [machines](/home/delaney/nixos-config/machines): per-machine hardware-generated settings and machine identity
 - [pkgs](/home/delaney/nixos-config/pkgs): custom packages used by the system config
+<<<<<<< Updated upstream
 - [switch](/home/delaney/nixos-config/switch:1): auto-detecting wrapper for `nixos-rebuild switch` plus Stow dotfiles
 - [dotfiles/nixos-home](/home/delaney/nixos-config/dotfiles/nixos-home): GNU Stow package linked into `$HOME`
 - [apply-dotfiles](/home/delaney/nixos-config/apply-dotfiles:1): safe Stow wrapper with conflict backups
+=======
+- [switch](/home/delaney/nixos-config/switch:1): local wrapper for `nixos-rebuild switch` plus Stow dotfiles
+- [dotfiles/nixos-home](/home/delaney/nixos-config/dotfiles/nixos-home): GNU Stow package linked into `$HOME`, including local Pi agent skills under `.pi/agent/skills`
+- [apply-dotfiles](/home/delaney/nixos-config/apply-dotfiles:1): safe Stow wrapper with conflict backups and Pi skill sync
+>>>>>>> Stashed changes
 
 ## Apply Config Changes
 
@@ -41,6 +47,8 @@ NIXOS_MACHINE=yoga ~/nixos-config/switch
 ```
 
 If an existing target conflicts with a Stow-managed file, it is moved to `~/.dotfiles-backup/<timestamp>/` before linking.
+
+Before stowing, `apply-dotfiles` copies local Pi agent skills from `~/.pi/agent/skills` into `dotfiles/nixos-home/.pi/agent/skills`. After the first `switch`, those skill files are Stow-managed, so edits under `~/.pi/agent/skills` update this repo directly.
 
 ## Validate Before Switching
 
