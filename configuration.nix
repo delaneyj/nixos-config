@@ -594,6 +594,7 @@ in
     gcc
     gh
     git
+    tea
     gnumake
     go
     gopls
