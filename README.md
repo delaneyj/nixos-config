@@ -4,10 +4,10 @@ Machine-level NixOS configuration for this system lives here.
 
 ## Layout
 
-- [configuration.nix](/home/delaney/nixos-config/configuration.nix:1): main system configuration
-- [hardware-configuration.nix](/home/delaney/nixos-config/hardware-configuration.nix:1): hardware-generated settings
+- [configuration.nix](/home/delaney/nixos-config/configuration.nix:1): shared system configuration
+- [machines](/home/delaney/nixos-config/machines): per-machine hardware-generated settings and machine identity
 - [pkgs](/home/delaney/nixos-config/pkgs): custom packages used by the system config
-- [switch](/home/delaney/nixos-config/switch:1): local wrapper for `nixos-rebuild switch` plus Stow dotfiles
+- [switch](/home/delaney/nixos-config/switch:1): auto-detecting wrapper for `nixos-rebuild switch` plus Stow dotfiles
 - [dotfiles/nixos-home](/home/delaney/nixos-config/dotfiles/nixos-home): GNU Stow package linked into `$HOME`
 - [apply-dotfiles](/home/delaney/nixos-config/apply-dotfiles:1): safe Stow wrapper with conflict backups
 
@@ -25,11 +25,19 @@ Or, after dotfiles have been stowed, use the fish alias:
 switch-nixos
 ```
 
-The wrapper runs the rebuild, then restows user dotfiles:
+The wrapper auto-detects the machine, passes the matching `machines/<name>.nix` as `nixos-machine-config`, runs the rebuild, then restows user dotfiles:
 
 ```bash
-sudo nixos-rebuild switch -I nixos-config=$HOME/nixos-config/configuration.nix
+sudo nixos-rebuild switch \
+  -I nixos-config=$HOME/nixos-config/configuration.nix \
+  -I nixos-machine-config=$HOME/nixos-config/machines/<name>.nix
 ~/nixos-config/apply-dotfiles ~/nixos-config
+```
+
+Override detection when needed:
+
+```bash
+NIXOS_MACHINE=yoga ~/nixos-config/switch
 ```
 
 If an existing target conflicts with a Stow-managed file, it is moved to `~/.dotfiles-backup/<timestamp>/` before linking.
@@ -39,19 +47,21 @@ If an existing target conflicts with a Stow-managed file, it is moved to `~/.dot
 Evaluate the full system config without applying it:
 
 ```bash
-nix-instantiate '<nixpkgs/nixos>' -A config.system.build.toplevel -I nixos-config=$HOME/nixos-config/configuration.nix
+nix-instantiate '<nixpkgs/nixos>' -A config.system.build.toplevel \
+  -I nixos-config=$HOME/nixos-config/configuration.nix \
+  -I nixos-machine-config=$HOME/nixos-config/machines/yoga.nix
 ```
 
 Build without switching:
 
 ```bash
-sudo nixos-rebuild build -I nixos-config=$HOME/nixos-config/configuration.nix
+~/nixos-config/switch build
 ```
 
 Activate temporarily for testing:
 
 ```bash
-sudo nixos-rebuild test -I nixos-config=$HOME/nixos-config/configuration.nix
+~/nixos-config/switch test
 ```
 
 ## Update Packages

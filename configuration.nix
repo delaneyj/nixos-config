@@ -411,8 +411,8 @@ in
 
 {
   imports = [
-    # Include the results of the hardware scan.
-    ./hardware-configuration.nix
+    # Selected by ./switch with: -I nixos-machine-config=./machines/<machine>.nix
+    <nixos-machine-config>
   ];
 
   # Bootloader.
@@ -423,8 +423,7 @@ in
   boot.kernelPackages = pkgs.linuxPackages_6_12;
   boot.supportedFilesystems = [ "zfs" ];
 
-  networking.hostName = "nixos"; # Define your hostname.
-  networking.hostId = "aa44369d"; # Required for ZFS pool imports.
+  # Machine identity lives in machines/<machine>.nix.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary

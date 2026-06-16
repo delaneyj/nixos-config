@@ -1,17 +1,14 @@
-# Do not modify this file unless you know the hardware layout changed.
-# Keep most system changes in ./configuration.nix.
-{
-  config,
-  lib,
-  pkgs,
-  modulesPath,
-  ...
-}:
+# Original desktop/workstation hardware config.
+# Generated hardware settings plus machine identity.
+{ config, lib, pkgs, modulesPath, ... }:
 
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
+
+  networking.hostName = "nixos";
+  networking.hostId = "aa44369d";
 
   boot.initrd.availableKernelModules = [
     "nvme"

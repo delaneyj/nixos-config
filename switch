@@ -1,13 +1,88 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-config_dir="$HOME/nixos-config"
+config_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 config_file="$config_dir/configuration.nix"
+machines_dir="$config_dir/machines"
 
 if [[ ! -f "$config_file" ]]; then
   echo "missing config: $config_file" >&2
   exit 1
 fi
 
-sudo nixos-rebuild switch -I "nixos-config=$config_file" "$@"
-"$config_dir/apply-dotfiles" "$config_dir"
+read_dmi() {
+  local name="$1"
+  local path="/sys/class/dmi/id/$name"
+  [[ -r "$path" ]] && tr -d '\0' < "$path" || true
+}
+
+detect_machine() {
+  if [[ -n "${NIXOS_MACHINE:-}" ]]; then
+    printf '%s\n' "$NIXOS_MACHINE"
+    return
+  fi
+
+  local hostname product_name product_family product_version sys_vendor
+  hostname="$(hostname 2>/dev/null || true)"
+  product_name="$(read_dmi product_name)"
+  product_family="$(read_dmi product_family)"
+  product_version="$(read_dmi product_version)"
+  sys_vendor="$(read_dmi sys_vendor)"
+
+  case "$product_name" in
+    82UF) printf '%s\n' yoga; return ;;
+  esac
+
+  case "$product_family $product_version" in
+    *"Yoga 7 16IAH7"*) printf '%s\n' yoga; return ;;
+  esac
+
+  if [[ -f "$machines_dir/$hostname.nix" ]]; then
+    printf '%s\n' "$hostname"
+    return
+  fi
+
+  cat >&2 <<EOF
+Could not auto-detect this machine.
+
+DMI info:
+  sys_vendor=$sys_vendor
+  product_name=$product_name
+  product_family=$product_family
+  product_version=$product_version
+  hostname=$hostname
+
+Known machines:
+$(find "$machines_dir" -maxdepth 1 -type f -name '*.nix' -printf '  %f\n' | sort | sed 's/\.nix$//')
+
+Override with:
+  NIXOS_MACHINE=<name> $0 $*
+EOF
+  exit 1
+}
+
+machine="$(detect_machine)"
+machine_config="$machines_dir/$machine.nix"
+
+if [[ ! -f "$machine_config" ]]; then
+  echo "missing machine config: $machine_config" >&2
+  exit 1
+fi
+
+action="switch"
+case "${1:-}" in
+  switch|boot|test|build|dry-build|dry-activate)
+    action="$1"
+    shift
+    ;;
+esac
+
+echo "Using machine config: $machine ($machine_config)"
+sudo nixos-rebuild "$action" \
+  -I "nixos-config=$config_file" \
+  -I "nixos-machine-config=$machine_config" \
+  "$@"
+
+if [[ "$action" == "switch" || "$action" == "test" ]]; then
+  "$config_dir/apply-dotfiles" "$config_dir"
+fi
