@@ -14,6 +14,10 @@ Apply these style choices when writing or refactoring Go code.
 - Put type-specific encode/decode/append/marshal helpers in the file for that type.
 - Keep central files for shared dispatch, interfaces, or low-level reusable helpers only.
 
+## Naming
+
+- Do not all-caps domain acronyms in Go identifiers unless they are standard Go initialisms. Prefer `OwlSource`, `RonValue`, and `RdfTerm` over `OWLSource`, `RONValue`, and `RDFTerm`.
+
 ## Domain types and interfaces
 
 - Owned concrete domain types should implement relevant interfaces directly.
@@ -115,8 +119,11 @@ Apply these style choices when writing or refactoring Go code.
 
 ## Helpers
 
-- Do not add single-use package-level funcs, vars, consts, or types.
-- Inline single-use helpers unless they are needed for tests, interfaces, recursion, generic reuse, or materially clearer repeated structure.
+- Hard ban: do not add single-use package-level funcs, vars, consts, or types.
+- Tests do not justify a package-level production helper. If production has one call and tests have more calls, inline it in production and duplicate or localize test setup.
+- Do not evade this by exporting a declaration. Exported single-use declarations are worse unless required by an existing interface, route/API boundary, recursion, generic reuse, or multiple production call sites.
+- Prefer local closures or inline blocks over new package-level declarations for one-off sequencing.
+- Before finishing any Go change, inspect every new package-level declaration in `git diff`. For each, run a usage search. If it has fewer than two production call sites and is not one of the allowed exceptions, remove or inline it before reporting done.
 
 ## Ignored return values
 

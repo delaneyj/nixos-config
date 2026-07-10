@@ -1,8 +1,9 @@
 [Default Applications]
-text/html=zoom-aware-browser.desktop
-x-scheme-handler/http=zoom-aware-browser.desktop
-x-scheme-handler/https=zoom-aware-browser.desktop
+text/html=google-chrome.desktop
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
 x-scheme-handler/zoommtg=Zoom.desktop
 x-scheme-handler/zoomus=Zoom.desktop
 x-scheme-handler/about=google-chrome.desktop
 x-scheme-handler/unknown=google-chrome.desktop
+x-scheme-handler/slack=slack.desktop

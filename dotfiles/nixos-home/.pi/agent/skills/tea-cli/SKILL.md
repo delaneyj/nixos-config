@@ -126,7 +126,9 @@ When asked to create a PR for the current branch/issue:
    ```
 5. Create terse PR details as a synopsis of commits and final results:
    - title: imperative/summary title, include issue number only if useful
-   - body: short bullets; summarize commit themes and actual final result
+   - body must include a `Why:` section before `What changed:` or summary bullets
+   - `Why:` explains the root cause, user impact, and why this fix is the right shape; do not merely restate the diff
+   - `What changed:` summarizes commit themes and actual final result
    - avoid long process logs, test dumps, or speculative future work
    - include closes/fixes reference when intended, e.g. `Closes #<number>`
    - assign the linked issue creator as reviewer when creating the PR; get creator from `tea issue <number> --output json` field `user`
@@ -138,8 +140,13 @@ When asked to create a PR for the current branch/issue:
    cat > "$tmp" <<'EOF'
    Closes #<number>
 
-   - Summary bullet
-   - Summary bullet
+   Why:
+   - Root cause and user impact.
+   - Why this fix is the right shape.
+
+   What changed:
+   - Summary bullet.
+   - Summary bullet.
 
    Tests: <command>
    EOF

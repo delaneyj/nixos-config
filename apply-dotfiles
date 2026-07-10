@@ -88,9 +88,24 @@ if [[ "$stow_ok" -ne 1 ]]; then
   exit 1
 fi
 
+apply_plasma_colors() {
+  local scheme_name="GruvboxDarkHard"
+  local scheme_path="$HOME/.local/share/color-schemes/$scheme_name.colors"
+
+  [[ -f "$scheme_path" ]] || return 0
+
+  if command -v plasma-apply-colorscheme >/dev/null 2>&1; then
+    plasma-apply-colorscheme --accent-color '#fe8019' "$scheme_name" >/dev/null 2>&1 \
+      || plasma-apply-colorscheme "$scheme_name" >/dev/null 2>&1 \
+      || true
+  fi
+}
+
 if [[ -d "$HOME/.ssh" ]]; then
   chmod 700 "$HOME/.ssh"
 fi
+
+apply_plasma_colors
 
 if [[ -d "$HOME/.config/Code/Backups" ]]; then
   while IFS= read -r backup; do

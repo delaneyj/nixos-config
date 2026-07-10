@@ -454,8 +454,16 @@ in
   # Keep X11 available for apps that still need it.
   services.xserver.enable = true;
 
-  # Enable the COSMIC greeter and desktop session.
-  services.displayManager.cosmic-greeter.enable = true;
+  # Enable Wacom tablet/Cintiq input support.
+  services.xserver.wacom.enable = true;
+  services.udev.packages = with pkgs; [
+    libwacom
+  ];
+
+  # Enable SDDM login with both Plasma and COSMIC sessions.
+  services.displayManager.sddm.enable = true;
+  services.displayManager.cosmic-greeter.enable = false;
+  services.desktopManager.plasma6.enable = true;
   services.desktopManager.cosmic.enable = true;
 
   # Configure keymap in X11
@@ -602,8 +610,13 @@ in
     google-chrome
     imagemagick
     impression
+    inkscape
     jq
+    kdePackages.kconfig
+    kdePackages.krohnkite
+    kdePackages.qttools
     krita
+    libwacom
     llamaCppVulkan
     nats-server
     natscli
@@ -631,6 +644,7 @@ in
     terminalDictate
     terminalDictateToggle
     upx
+    usbutils
     vlc
     vulkan-tools
     vscodePackage
