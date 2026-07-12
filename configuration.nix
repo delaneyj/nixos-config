@@ -451,22 +451,15 @@ in
     LC_TIME = "en_US.UTF-8";
   };
 
-  # Keep X11 available for apps that still need it.
-  services.xserver.enable = true;
-
-  # Enable Wacom tablet/Cintiq input support.
-  services.xserver.wacom.enable = true;
+  # Enable Wacom tablet/Cintiq metadata for COSMIC's libinput support.
   services.udev.packages = with pkgs; [
     libwacom
   ];
 
-  # Enable SDDM login with both Plasma and COSMIC sessions.
-  services.displayManager.sddm.enable = true;
-  services.displayManager.cosmic-greeter.enable = false;
-  services.desktopManager.plasma6.enable = true;
+  services.displayManager.cosmic-greeter.enable = true;
   services.desktopManager.cosmic.enable = true;
 
-  # Configure keymap in X11
+  # Configure XKB for COSMIC and XWayland.
   services.xserver.xkb = {
     layout = "us";
     variant = "colemak";
@@ -567,6 +560,23 @@ in
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
+  # COSMIC 1.0 drops Wacom tablet pointer frames and routes tablets to the
+  # wrong output. Remove this overlay after the upstream fix is released.
+  # https://github.com/pop-os/cosmic-comp/pull/2287
+  nixpkgs.overlays = [
+    (_final: prev: {
+      cosmic-comp = prev.cosmic-comp.overrideAttrs (old: {
+        patches = (old.patches or [ ]) ++ [
+          (prev.fetchpatch {
+            name = "2287.patch";
+            url = "https://github.com/pop-os/cosmic-comp/commit/079fcb4703f429a7211b1524c22db8645aef44b0.patch";
+            hash = "sha256-vD7h6bqpGeJv5WOXLuJZwvG+SzejpuS8h6DiEZ9QfYs=";
+          })
+        ];
+      });
+    })
+  ];
+
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
@@ -612,9 +622,6 @@ in
     impression
     inkscape
     jq
-    kdePackages.kconfig
-    kdePackages.krohnkite
-    kdePackages.qttools
     krita
     libwacom
     llamaCppVulkan

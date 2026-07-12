@@ -1,0 +1,6 @@
+{
+    "Wacom Cintiq Pro 24 Pen": (
+        state: Enabled,
+        map_to_output: Some("DP-1"),
+    ),
+}
