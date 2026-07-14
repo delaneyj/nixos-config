@@ -571,22 +571,6 @@ in
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  # COSMIC 1.0 drops Wacom tablet pointer frames and routes tablets to the
-  # wrong output. Remove this overlay after the upstream fix is released.
-  # https://github.com/pop-os/cosmic-comp/pull/2287
-  nixpkgs.overlays = [
-    (_final: prev: {
-      cosmic-comp = prev.cosmic-comp.overrideAttrs (old: {
-        patches = (old.patches or [ ]) ++ [
-          (prev.fetchpatch {
-            name = "2287.patch";
-            url = "https://github.com/pop-os/cosmic-comp/commit/079fcb4703f429a7211b1524c22db8645aef44b0.patch";
-            hash = "sha256-H/+UIIooz6bRMmDiPp+Qp5f61V5+062e8Y5lWmU5g0I=";
-          })
-        ];
-      });
-    })
-  ];
 
   nix.settings.experimental-features = [
     "nix-command"

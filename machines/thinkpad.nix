@@ -38,25 +38,16 @@
   '';
 
   fileSystems."/" = {
-    device = "/dev/disk/by-uuid/83613c87-fd02-4b71-b6d3-3deb0b0debf4";
+    device = "/dev/disk/by-uuid/db5c5a90-32e8-477e-8f3a-3e2b2000603f";
     fsType = "ext4";
   };
 
   fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/0785-8C2A";
+    device = "/dev/disk/by-uuid/B56F-154A";
     fsType = "vfat";
     options = [
       "fmask=0077"
       "dmask=0077"
-    ];
-  };
-
-  fileSystems."/data" = {
-    device = "/dev/disk/by-uuid/df8b8504-75f2-425c-a5fa-87e018df8874";
-    fsType = "btrfs";
-    options = [
-      "compress-force=zstd:3"
-      "noatime"
     ];
   };
 

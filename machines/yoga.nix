@@ -7,6 +7,21 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
 
+  # Enable COSMIC Wacom workaround on this machine too.
+  nixpkgs.overlays = [
+    (_final: prev: {
+      cosmic-comp = prev.cosmic-comp.overrideAttrs (old: {
+        patches = (old.patches or [ ]) ++ [
+          (prev.fetchpatch {
+            name = "2287.patch";
+            url = "https://github.com/pop-os/cosmic-comp/commit/079fcb4703f429a7211b1524c22db8645aef44b0.patch";
+            hash = "sha256-H/+UIIooz6bRMmDiPp+Qp5f61V5+062e8Y5lWmU5g0I=";
+          })
+        ];
+      });
+    })
+  ];
+
   networking.hostName = "yoga";
   networking.hostId = "d518a0ef";
 
