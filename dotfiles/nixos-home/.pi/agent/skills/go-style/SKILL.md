@@ -29,6 +29,10 @@ Apply these style choices when writing or refactoring Go code.
 - Prefer each type owning its own serialization methods.
 - Avoid central type-switches for behavior that naturally belongs on the type, such as ordered key encoding.
 - Shared helpers are fine for repeated mechanics, e.g. ordered numeric sequences or raw binary append loops.
+- Hard ban JSON intermediates when producing RON from an existing Go value. Use `ron.Marshal`, `ron.MarshalCompact`, `ron.MarshalInto`, or `ron.NewEncoder` directly.
+- Never call `json.Marshal`/`json.MarshalIndent` on a Go value and feed those bytes to `ron.FromJSON`/`ron.FromJSONCompact`.
+- `ron.FromJSON` is only for genuinely JSON-originated bytes when no Go value is available, such as user JSON input, captured JSON middleware output, or a JSON wire payload.
+- Before finishing RON work, search for JSON-marshal-to-`FromJSON` chains and remove every avoidable chain.
 
 ## Variadics
 

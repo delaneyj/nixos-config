@@ -10,3 +10,9 @@
 [credential "https://git.stellarcorps.dev"]
 	helper =
 	helper = !tea login helper
+[credential "https://github.com"]
+	helper =
+	helper = !/run/current-system/sw/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/run/current-system/sw/bin/gh auth git-credential
