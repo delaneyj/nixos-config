@@ -25,4 +25,25 @@ if status is-interactive
     alias sd sd-cli
     alias switch-nixos "$HOME/nixos-config/switch"
     alias yolo "codex --dangerously-bypass-approvals-and-sandbox"
+
+    # Auto-enter nix develop for projects with a flake.
+    function __auto_nix_develop
+        if set -q IN_NIX_SHELL
+            return
+        end
+
+        if not test -f "$PWD/flake.nix"; and not test -f "$PWD/shell.nix"; and not test -f "$PWD/default.nix"
+            return
+        end
+
+        if command -v nix >/dev/null
+            exec nix develop "$PWD" --command fish
+        end
+    end
+
+    function __auto_nix_develop_on_pwd --on-variable PWD
+        __auto_nix_develop
+    end
+
+    __auto_nix_develop
 end
