@@ -31,11 +31,18 @@ detect_machine() {
 
   case "$product_name" in
     82UF) printf '%s\n' yoga; return ;;
+    20Y70038US) printf '%s\n' thinkpad; return ;;
   esac
 
   case "$product_family $product_version" in
     *"Yoga 7 16IAH7"*) printf '%s\n' yoga; return ;;
+    *"ThinkPad E14 Gen 3"*) printf '%s\n' thinkpad; return ;;
   esac
+
+  if [[ "$hostname" == "thinkpad" ]]; then
+    printf '%s\n' thinkpad
+    return
+  fi
 
   if [[ -f "$machines_dir/$hostname.nix" ]]; then
     printf '%s\n' "$hostname"
