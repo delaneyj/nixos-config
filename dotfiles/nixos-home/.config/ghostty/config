@@ -1,3 +1,9 @@
+# Enable URL-to-browser launching in terminal output (hover requires Ctrl).
+link-url = true
+
+# Show matched URL previews and allow easy hover targeting.
+link-previews = true
+
 theme = Gruvbox Dark
 bell-features = audio
 bell-audio-path = /home/delaney/.local/share/sounds/ghostty-bell.wav
