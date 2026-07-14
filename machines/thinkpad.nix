@@ -23,6 +23,7 @@
     "sd_mod"
   ];
   boot.initrd.kernelModules = [ ];
+  boot.loader.systemd-boot.configurationLimit = 5;
   boot.kernelModules = [ "kvm-amd" ];
   boot.kernelParams = [
     # Keep the Cintiq Pro 24 USB hub/tablet path from dropping during enumeration.
