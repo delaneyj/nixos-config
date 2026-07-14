@@ -53,6 +53,9 @@
 
   swapDevices = [ ];
 
+  # ThinkPad-specific: skip auto-starting COSMIC apps.
+  systemd.user.services.cosmic-startup-apps.enable = false;
+
   # Keep COSMIC Wacom workaround overlay off on ThinkPad.
   nixpkgs.overlays = lib.mkForce [ ];
 
