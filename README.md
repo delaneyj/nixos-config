@@ -84,17 +84,17 @@ sudo nix-channel --list
 nixos-version
 ```
 
-## VS Code
+## Chrome and VS Code
 
-VS Code is pinned separately from `nixos-unstable` inside [configuration.nix](/home/delaney/nixos-config/configuration.nix:9). That means:
+Chrome and VS Code are pinned separately from the main `nixos` channel inside [configuration.nix](/home/delaney/nixos-config/configuration.nix:9). Chrome comes from the pinned `nixos-unstable` package set. VS Code uses an explicit upstream release override on that package set.
 
-- updating the main `nixos` channel does not update VS Code
-- updating VS Code requires changing the pinned `unstablePkgs` tarball URL and `sha256`
+Updating the main `nixos` channel does not update either application. Update the `unstablePkgs` revision and hash for Chrome, and the explicit version, URL, and hash for VS Code.
 
-Check the current pinned version:
+Check the active versions after switching:
 
 ```bash
-nix-instantiate --eval --strict --expr 'let unstablePkgs = import (builtins.fetchTarball { url = "https://github.com/NixOS/nixpkgs/archive/1c3fe55ad329cbcb28471bb30f05c9827f724c76.tar.gz"; sha256 = "1cb124rcycigz060wsix7a9bnyjdgwqns2fynkyfn20jgwxds6kg"; }) { config.allowUnfree = true; }; in unstablePkgs.vscode.version'
+google-chrome-stable --version
+code --version
 ```
 
 ## COSMIC Session Behavior

@@ -6,19 +6,19 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "cos-cli";
-  version = "0.4.1";
+  version = "0.5.1";
 
   src = fetchFromGitHub {
     owner = "estin";
     repo = "cos-cli";
-    rev = "99cb0714bfd655a213f02c21302d50ae206df176";
-    hash = "sha256-mFlkga2R4RKZRQ9wzTu/dM8lEfyICrm+be9a3SN1k2A=";
+    rev = "fe8c52016888302d6239ef53f1dbf876d8552dc2";
+    hash = "sha256-IN+36GlQKyCbvK83lfospUWeaghqZ/sKtJZga8lIzF4=";
   };
 
   cargoLock = {
     lockFile = "${src}/Cargo.lock";
     outputHashes = {
-      "cosmic-protocols-0.2.0" = "sha256-ymn+BUTTzyHquPn4hvuoA3y1owFj8LVrmsPu2cdkFQ8=";
+      "cosmic-protocols-0.2.0" = "sha256-xZ0ntzt9eAC95OiNdQmun0+yeHTWIPOvv21msvA0emc=";
     };
   };
 

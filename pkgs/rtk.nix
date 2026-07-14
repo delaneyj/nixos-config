@@ -6,13 +6,13 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "rtk";
-  version = "0.39.0";
+  version = "0.43.0";
 
   src = fetchFromGitHub {
     owner = "rtk-ai";
     repo = "rtk";
     rev = "v${version}";
-    hash = "sha256-TX4MtR/rq61wxHWYJAO2x3CYvZtkCoXynf45dRC+MVo=";
+    hash = "sha256-n5bkPPsrdM4fE5ltocTjlq+JwRgp39yib6S79fci4m4=";
   };
 
   cargoLock = {

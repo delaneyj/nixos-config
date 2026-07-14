@@ -104,12 +104,13 @@ let
   unstablePkgs =
     import
       (builtins.fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/1c3fe55ad329cbcb28471bb30f05c9827f724c76.tar.gz";
-        sha256 = "1cb124rcycigz060wsix7a9bnyjdgwqns2fynkyfn20jgwxds6kg";
+        url = "https://github.com/NixOS/nixpkgs/archive/e7a3ca8092b61ff85b6a45bf863ea2b2d6a661b3.tar.gz";
+        sha256 = "1h4jkfjbdp9y0alp86z38g60mqw7rzx89gn16dbvw8wn2z7r002j";
       })
       {
         config.allowUnfree = true;
       };
+  chromePackage = unstablePkgs.google-chrome;
   cosmicScreenshotSaveAndCopy = pkgs.writeShellApplication {
     name = "cosmic-screenshot-save-and-copy";
     runtimeInputs = with pkgs; [
@@ -180,7 +181,7 @@ let
           ;;
       esac
 
-      exec ${pkgs.google-chrome}/bin/google-chrome-stable "$@"
+      exec ${chromePackage}/bin/google-chrome-stable "$@"
     '';
   };
 
@@ -251,7 +252,16 @@ let
     vulkanSupport = true;
   };
   stableDiffusionCppVulkan = unstablePkgs.stable-diffusion-cpp-vulkan;
+  vscodePackageRaw = unstablePkgs.vscode.overrideAttrs (_old: {
+    version = "1.128.0";
+    src = unstablePkgs.fetchurl {
+      name = "VSCode_1.128.0_linux-x64.tar.gz";
+      url = "https://update.code.visualstudio.com/1.128.0/linux-x64/stable";
+      hash = "sha256-qbTOl07MEMdFbamHl2O/CnpDJxC9JslaiaihaPKv9Xs=";
+    };
+  });
   vscodePackageBase = unstablePkgs.vscode-with-extensions.override {
+    vscode = vscodePackageRaw;
     vscodeExtensions = [
       unstablePkgs.vscode-extensions.jdinhlife.gruvbox
       unstablePkgs.vscode-extensions.golang.go
@@ -278,14 +288,14 @@ let
       {
         name = "vscode-pull-request-github";
         publisher = "GitHub";
-        version = "0.141.2026042904";
-        sha256 = "HYJt2E2z64SyZsNrmK8t8npewz3YTfr011sUe5lHLYg=";
+        version = "0.157.2026071304";
+        sha256 = "2A4IM9EzAk8I4UV1OP8ecM25Km6mHfRS4UK9L2Dj1Rw=";
       }
       {
         name = "copilot-chat";
         publisher = "GitHub";
-        version = "0.44.2";
-        sha256 = "18lpapr3n0kpgrvg20kp8bgg4srmicw11cnf5fwdclmk1rnfjclj";
+        version = "0.48.1";
+        sha256 = "eFLfYMFxvgtZtmwLsxfneMjD4jOg8/Uk0Eu/6+A6odY=";
       }
       {
         name = "gitea-vscode";
@@ -341,7 +351,7 @@ let
           --replace-fail @BASH@ ${pkgs.bash}/bin/bash \
           --replace-fail @BASE_EXT_DIR@ "$base_ext_dir" \
           --replace-fail @JQ@ ${pkgs.jq}/bin/jq \
-          --replace-fail @VSCODE@ ${unstablePkgs.vscode}/bin/code
+          --replace-fail @VSCODE@ ${vscodePackageRaw}/bin/code
         chmod +x "$out/bin/code"
   '';
 
@@ -353,7 +363,7 @@ let
       wait = 20;
     }
     {
-      command = "${pkgs.google-chrome}/bin/google-chrome-stable";
+      command = "${chromePackage}/bin/google-chrome-stable";
       appId = "google-chrome";
       workspace = "0";
       wait = 20;
@@ -588,7 +598,7 @@ in
   ];
 
   environment.variables = {
-    BROWSER = "${pkgs.google-chrome}/bin/google-chrome-stable";
+    BROWSER = "${chromePackage}/bin/google-chrome-stable";
     SSH_ASKPASS_REQUIRE = "never";
     TERMINAL = "ghostty";
   };
@@ -617,7 +627,7 @@ in
     go
     gopls
     ghostty
-    google-chrome
+    chromePackage
     imagemagick
     impression
     inkscape
