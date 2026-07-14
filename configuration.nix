@@ -211,6 +211,16 @@ let
     '';
   };
 
+  # Wrap Ghostty to disable GTK portal-based URI opens, which can fail silently
+  # in COSMIC when clicking terminal URLs.
+  ghosttyNoPortal = pkgs.writeShellApplication {
+    name = "ghostty";
+    text = ''
+      export GTK_USE_PORTAL=0
+      exec ${lib.getExe pkgs.ghostty} "$@"
+    '';
+  };
+
   discordPackage =
     pkgs.runCommand "discord-browser-aware-${lib.getVersion pkgs.discord}"
       { nativeBuildInputs = [ pkgs.makeWrapper ]; }
@@ -357,7 +367,7 @@ let
 
   cosmicStartupApps = [
     {
-      command = "${pkgs.ghostty}/bin/ghostty";
+      command = "${lib.getExe ghosttyNoPortal}";
       appId = "com.mitchellh.ghostty";
       workspace = "0";
       wait = 20;
@@ -585,7 +595,7 @@ in
   environment.variables = {
     BROWSER = "${chromePackage}/bin/google-chrome-stable";
     SSH_ASKPASS_REQUIRE = "never";
-    TERMINAL = "ghostty";
+    TERMINAL = "${lib.getExe ghosttyNoPortal}";
   };
 
   # List packages installed in system profile. To search, run:
@@ -611,7 +621,7 @@ in
     gnumake
     go
     gopls
-    ghostty
+    ghosttyNoPortal
     chromePackage
     imagemagick
     impression
