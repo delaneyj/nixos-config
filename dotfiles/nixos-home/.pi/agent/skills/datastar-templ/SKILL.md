@@ -33,6 +33,10 @@ When planning or implementing web UI, explicitly load/apply:
 
 UI plans should name these applicable skills instead of only saying “use Datastar”.
 
+## CSS token gate
+
+Any UI change that adds or edits CSS must apply `datastar-css` before editing and during final review. Every project-authored design value must be consumed through a CSS custom property. Search `stellar.css` and `stellarui.css` first; add a scoped variable only when no matching Stellar token exists. Do not report UI work complete while added declarations contain hard-coded colors, spacing, sizes, radii, shadows, timing, or layout measures.
+
 ## templ component shape
 
 - Keep page wrapper and app fragment separate:

@@ -14,6 +14,15 @@ CSS should support semantic HTML and coarse morphing. Keep styling declarative; 
 - Style states with attributes/classes that Datastar toggles (`data-class:*`, `aria-*`, `hidden`) rather than custom JS.
 - Prefer project design-system controls for app UI forms/filters (for example StellarUI `stellar-text-field`, `stellar-select`, `stellar-button`) instead of raw inputs, while preserving native form submission/progressive enhancement semantics.
 
+## Design tokens are mandatory
+
+- Always use CSS custom properties for design values. Do not write literal colors, spacing, font sizes, control sizes, radii, shadows, animation durations, z-index layers, or reusable layout measures in project CSS.
+- Search `stellar.css` and `stellarui.css` first. Reuse the closest existing Stellar variable whenever its semantics match.
+- If no suitable Stellar variable exists, add a clearly named variable at the narrowest shared owner (`stellarui.css` for reusable UI-system values, the app root for app-wide values, or the feature root for feature-only values), then consume that variable. Do not repeat the fallback literal at call sites.
+- Literal `0`, percentages, intrinsic keywords, and unitless multipliers are allowed. A one-pixel hairline must use the existing border-width variable rather than literal `1px` when one exists.
+- CSS query thresholds cannot currently use custom properties. Avoid width breakpoints through intrinsic flex/grid layout first. If a media/container query is truly necessary, scope it to the owning component and document why the structural mode change cannot be intrinsic.
+- Before reporting CSS work complete, audit every added declaration for literals and replace design literals with existing or newly defined variables.
+
 ## Modern CSS
 
 Use modern CSS nesting by default for project-authored CSS. Flat repeated selectors are a smell unless the file is generated, vendored, or a tiny reset.
@@ -45,8 +54,8 @@ Use modern CSS nesting by default for project-authored CSS. Flat repeated select
 - Keep component/layout class names only for real ownership boundaries or custom elements; do not add class wrappers when semantic elements already identify the structure.
 - Scope styles by feature root class/ID to avoid global leakage.
 - Prefer low-specificity selectors; use `:where()` for grouping when helpful.
-- Prefer design tokens/custom properties (`--space-*`, `--color-*`) over magic values when the project has tokens.
-- When a project uses Stellar CSS, copy/use its baseline stylesheet and derive app CSS from Stellar variables; avoid hard-coded colors, spacing, typography, and radius values when a Stellar variable exists.
+- Use design tokens/custom properties (`--space-*`, `--color-*`) instead of magic values.
+- When a project uses Stellar CSS, copy/use its baseline stylesheet and derive app CSS from Stellar variables. Hard-coded design values are not permitted.
 - Keep layout resilient: grid/flex, `minmax()`, logical properties, fluid sizes.
 - For filter/action bars, prefer flex with `flex-wrap`, explicit `gap`, and tokenized spacing so controls wrap cleanly on narrow screens.
 - Avoid inline styles except examples, dynamic values, or tiny one-offs already common in the target codebase.
@@ -75,4 +84,9 @@ For StellarUI/CodeMirror editors:
 
 ## Verification
 
-Before finishing CSS changes, scan touched CSS for unnecessary flat selectors and class-only structure; convert to nested semantic selectors where practical. Check generated markup remains semantic and accessible. For Go/templ projects, run `templ generate` plus normal tests/build.
+Before finishing CSS changes:
+
+1. Scan touched CSS for unnecessary flat selectors and class-only structure; convert to nested semantic selectors where practical.
+2. Audit added CSS values. Reuse variables from `stellar.css` or `stellarui.css`; add a scoped variable only when no matching token exists. Leave no hard-coded design literals.
+3. Check generated markup remains semantic and accessible.
+4. For Go/templ projects, run `templ generate` plus normal tests/build.
