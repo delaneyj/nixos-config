@@ -630,6 +630,7 @@ in
     gopls
     ghosttyNoPortal
     chromePackage
+    (callPackage ./pkgs/herdr.nix { })
     imagemagick
     impression
     inkscape
