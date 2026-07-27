@@ -1,42 +1,72 @@
 ---
 name: tea-cli
-description: Use the Gitea/Forgejo tea CLI. Use when listing, reading, creating, editing, reviewing, or linking Gitea issues, pull requests, releases, repos, notifications, or authenticated Gitea API calls.
+description: Defines use of the Gitea and Forgejo tea CLI. Use for issues, pull requests, releases, repositories, notifications, and authenticated API calls.
 ---
 
 # Tea CLI
 
-Use `tea` for Gitea/Forgejo operations from the terminal.
+Use `tea` for Gitea and Forgejo operations.
 
-## Availability
+## Setup
 
-- Prefer `tea` when available in `PATH`.
-- In Nix projects, if `tea` is not in `PATH`, use:
-  ```bash
-  nix develop --command tea --version
-  nix develop --command tea <args...>
-  ```
-- `tea` stores auth in `$XDG_CONFIG_HOME/tea`.
-- Never request or print tokens. If auth is missing, ask the user to run:
-  ```bash
-  tea login add
-  ```
+Use `tea` from `PATH`. In a Nix project, use the development shell when necessary:
 
-## Safety rules
+```bash
+nix develop --command tea --version
+nix develop --command tea <args...>
+```
 
-- Read/list/show operations are safe.
-- Do not run destructive or publishing operations without explicit current-turn user approval:
-  - `tea pr merge`, `tea pr close`, `tea issue close`, `tea release delete`, `tea repo delete`, `tea admin ...`
-  - creating/editing issues, PRs, releases, labels, milestones, webhooks, repos
-- Do not commit as part of a `tea` workflow unless the current user turn explicitly authorizes `git commit`; apply `no-unauthorized-commits` first.
-- Before opening a PR, verify git status/branch/remotes and tell the user if work is uncommitted or unpublished.
-- Issue-gated branch rule: never create or switch to an issue branch for new work until the matching open issue exists and has been read with `tea issue <number> --comments --output json`. If the user asks to replace/supersede an issue, create/read the replacement issue first, then create/rename/switch the branch to the replacement issue number. Do not branch from a closed/superseded issue except for cleanup of already-existing work, and report that cleanup explicitly.
-- Prefer non-interactive flags over prompts. If a command would prompt for unclear data, stop and ask.
+`tea` stores authentication in `$XDG_CONFIG_HOME/tea`.
 
-## Repo context
+Do not request or print a token. If authentication is missing, tell the user to run:
 
-If the repo uses a dev shell for `tea`/credential helpers, run authenticated git network commands through it too. In Nix projects prefer `nix develop --command git fetch|pull|push ...`; do not retry plain `git pull`/`git push` after a credential-helper failure.
+```bash
+tea login add
+```
 
-`tea` infers the Gitea login/repo from the current git remote. Before acting on a repo:
+## Safety
+
+Read operations are safe. Get explicit current-turn approval before these operations:
+
+- Create or edit an issue, PR, release, label, milestone, webhook, or repository.
+- Merge or close a PR.
+- Close an issue.
+- Delete a release or repository.
+- Run an administration command.
+
+Before `git commit`, use `no-unauthorized-commits`. A tea workflow does not authorize a commit.
+
+Before PR creation, examine status, branch, remotes, commits, and publication state.
+
+Use noninteractive flags. Stop for user input when required data is unclear.
+
+## Issue branch gate
+
+Do not create or switch to an issue branch until you read an open issue.
+
+Read the issue and comments first:
+
+```bash
+tea issue <number> --comments --output json
+```
+
+Require `state == "open"` before branch work.
+
+For a replacement issue:
+
+1. Create the replacement only with current-turn approval.
+2. Read the replacement issue.
+3. Create or rename the branch with the replacement issue number.
+
+Do not start new work from a closed or replaced issue. Existing-work cleanup is the only exception.
+
+## Repository context
+
+Use the development shell for authenticated git network commands when the project requires it.
+
+Do not retry plain `git pull` or `git push` after a credential-helper failure.
+
+Before repository operations, run:
 
 ```bash
 git remote -v
@@ -44,7 +74,7 @@ git branch --show-current
 tea repo --output json
 ```
 
-If repo detection is ambiguous, pass one of:
+If repository detection is ambiguous, use one selector:
 
 ```bash
 tea <cmd> --repo owner/repo
@@ -52,142 +82,149 @@ tea <cmd> --remote origin
 tea <cmd> --login <name>
 ```
 
-## Output handling
+## Output
 
-- Prefer machine-readable output when parsing:
-  ```bash
-  tea issue list --output json --limit 50
-  tea pr list --output json --state all --limit 50
-  tea release list --output json
-  ```
-- Use `--fields` to reduce table output:
-  ```bash
-  tea pr list --fields index,title,state,author,updated,ci
-  tea issue list --fields index,title,state,labels,updated
-  ```
-- Quote endpoints containing `?` or `&`.
+Use JSON for parsed output:
 
-## Issue work workflow
+```bash
+tea issue list --output json --limit 50
+tea pr list --output json --state all --limit 50
+tea release list --output json
+```
 
-When asked to work on a Gitea issue:
+Use `--fields` for small tables:
 
-0. Confirm there is a matching open issue before touching git branches:
-   - If the user names an issue number, read it first and require `state == "open"` before creating/switching branches.
-   - If the user describes work but no issue exists, do not invent a branch number. Ask to create an issue or, when the current turn explicitly approves issue creation, create the issue and read it back before branching.
-   - If replacing/superseding another issue, create/read the replacement issue before renaming/switching the branch; branch name must use the replacement issue number.
-1. Read the issue first:
-   ```bash
-   tea issue <number> --comments --output json
-   ```
-2. Derive a terse branch label from the issue title:
-   - lowercase
-   - words only, hyphen-separated
-   - remove filler words
-   - keep it short, usually 2-5 words
-   - include the issue number
-   - preferred shape: `<number>-<terse-label>`
-   - example: `42-query-inspect-switch`
-3. Find an existing local or remote branch for the issue before creating one:
-   ```bash
-   git branch --all --list '*<number>*'
-   git branch --all --list '*<terse-label>*'
-   ```
-4. Switch to the existing branch if found:
-   ```bash
-   git switch <branch>
-   ```
-   If only a remote branch exists:
-   ```bash
-   git switch --track origin/<branch>
-   ```
-5. If no branch exists, create it from the target base, usually up-to-date `main`. Only do this after step 0/1 confirmed the issue is open:
-   ```bash
-   git switch main
-   git pull --ff-only
-   git switch -c <number>-<terse-label>
-   ```
-6. After branch creation/switch, verify the branch name starts with the open issue number. If not, stop and fix it before editing files.
-7. Work normally. Do not commit unless the current user turn explicitly asks for `git commit`.
+```bash
+tea pr list --fields index,title,state,author,updated,ci
+tea issue list --fields index,title,state,labels,updated
+```
 
-When asked to create a PR for the current branch/issue:
+Quote API endpoints that contain `?` or `&`.
 
-1. Verify state:
-   ```bash
-   git status --short
-   git branch --show-current
-   git remote -v
-   git log --oneline --decorate main..HEAD
-   ```
-2. If current branch is `main`, stop and error out. Do not create a PR from `main`.
-3. Identify the issue number from the branch name first, then commits/issue context if needed.
-4. Ensure the branch is pushed:
-   ```bash
-   git push -u origin HEAD
-   ```
-5. Create terse PR details as a synopsis of commits and final results:
-   - title: imperative/summary title, include issue number only if useful
-   - body must include a `Why:` section before `What changed:` or summary bullets
-   - `Why:` explains the root cause, user impact, and why this fix is the right shape; do not merely restate the diff
-   - `What changed:` summarizes commit themes and actual final result
-   - avoid long process logs, test dumps, or speculative future work
-   - include closes/fixes reference when intended, e.g. `Closes #<number>`
-   - assign the linked issue creator as reviewer when creating the PR; get creator from `tea issue <number> --output json` field `user`
-   - for multi-line bodies, pass real newline characters; never pass literal `\n` escape sequences in quoted shell arguments
-   - safest pattern: write the body to a temp file/heredoc, then pass `--description "$(cat "$tmp")"`
-6. Create the PR only with explicit current-turn approval:
-   ```bash
-   tmp=$(mktemp)
-   cat > "$tmp" <<'EOF'
-   Closes #<number>
+## Issue workflow
 
-   Why:
-   - Root cause and user impact.
-   - Why this fix is the right shape.
+1. Find or create the applicable open issue.
+2. Do not invent an issue number.
+3. Read the issue and comments as JSON.
+4. Make a short branch label from the issue title.
+5. Use lowercase words separated by hyphens.
+6. Use two to five useful words and include the issue number.
+7. Use `<number>-<short-label>` by default.
+8. Find local and remote branches before branch creation.
 
-   What changed:
-   - Summary bullet.
-   - Summary bullet.
+```bash
+git branch --all --list '*<number>*'
+git branch --all --list '*<short-label>*'
+```
 
-   Tests: <command>
-   EOF
-   tea pr create --base main --head <branch> --title "..." --description "$(cat "$tmp")"
-   tea pr edit <pr-number> --add-reviewers <issue-creator>
-   ```
-   If the issue creator is also the PR author, reviewer assignment can fail; report that outcome.
+If a branch exists, switch to it:
+
+```bash
+git switch <branch>
+git switch --track origin/<branch>
+```
+
+If none exists, update the target base and create the branch:
+
+```bash
+git switch main
+git pull --ff-only
+git switch -c <number>-<short-label>
+```
+
+Use authenticated development-shell git commands when required.
+
+After the switch, make sure the branch starts with the open issue number.
+
+Do not edit files on a branch that fails this check. Do not commit without new current-turn authorization.
+
+## PR workflow
+
+Before PR creation, run:
+
+```bash
+git status --short
+git branch --show-current
+git remote -v
+git log --oneline --decorate main..HEAD
+```
+
+- Stop if the branch is `main`.
+- Get the issue number from the branch name first.
+- Examine the log for all intended commits.
+- Report uncommitted or unpublished work.
+- Push the branch before PR creation.
+
+```bash
+git push -u origin HEAD
+```
+
+Create the PR only with explicit current-turn approval.
+
+PR text rules:
+
+- Use a short title that describes the result.
+- Put `Why:` before `What changed:`.
+- In `Why:`, give the cause, user effect, and reason for the correction.
+- In `What changed:`, give commit themes and the result.
+- Do not include process logs, large test output, or speculative work.
+- Add `Closes #<number>` when applicable.
+- Assign the issue creator as reviewer.
+- Read the issue `user` field to get that reviewer.
+- Pass newline characters. Do not pass literal `\n` text.
+
+Use a temporary file for a multiline body:
+
+```bash
+tmp=$(mktemp)
+cat > "$tmp" <<'EOF'
+Closes #<number>
+
+Why:
+- Root cause and user effect.
+- Reason for this correction.
+
+What changed:
+- Final result.
+
+Tests: <command>
+EOF
+tea pr create --base main --head <branch> --title "..." --description "$(cat "$tmp")"
+tea pr edit <pr-number> --add-reviewers <issue-creator>
+```
+
+Reviewer assignment can fail when the issue creator is the PR author. Report that result.
 
 ## Post-merge cleanup
 
-When the user says a PR is merged or asks to verify merge:
+When the user says a PR was merged:
 
-1. Verify with `tea pr <number> --output json` and require `hasMerged: true`.
-2. Capture current branch. If it is the PR head branch, switch to the PR base branch.
-3. Update the base branch with authenticated/dev-shell git, e.g. `nix develop --command git fetch origin main --prune` and `nix develop --command git pull --ff-only`.
-4. Delete the local PR branch after switching away: `git branch -d <branch>`.
-5. Report final branch and clean/dirty status. Do not delete remote branches unless explicitly asked.
+1. Run `tea pr <number> --output json`.
+2. Require `hasMerged: true`.
+3. Save the current branch name.
+4. Switch to the PR base when currently on the PR branch.
+5. Fetch, prune, and fast-forward the base through the authenticated shell.
+6. Delete the local PR branch with `git branch -d <branch>`.
+7. Report the current branch and tree status.
 
-## Common commands
+Do not delete a remote branch without explicit approval.
 
-### Identity and setup
+## Commands
 
 ```bash
+# Identity
 tea login list
 tea login default
 tea whoami
-```
 
-### Issues
-
-```bash
+# Issues
 tea issue list --state open --output json
 tea issue <number> --comments
 tea issue create --title "..." --description "..."
 tea issue edit <number> --title "..." --description "..."
 tea issue close <number>
-```
 
-### Pull requests
-
-```bash
+# Pull requests
 tea pr list --state open --output json
 tea pr <number> --comments
 tea pr checkout <number>
@@ -196,28 +233,20 @@ tea pr review <number>
 tea pr approve <number>
 tea pr reject <number> --description "..."
 tea pr merge <number>
-```
 
-Before `tea pr create`, follow the issue PR workflow above. Always error out if the current branch is `main`. Ensure the branch is pushed; `tea` assumes local git state is already published.
-
-### Comments
-
-```bash
+# Comments and releases
 tea comment <issue-or-pr-number> --description "..."
-```
-
-### Releases
-
-```bash
 tea release list --output json
 tea release create --tag <tag> --title "..." --note "..."
 tea release edit <tag> --title "..."
 tea release delete <tag>
 ```
 
-### Authenticated API fallback
+Follow the safety and PR workflows before write commands.
 
-Use `tea api` when a `tea` subcommand lacks an option:
+## API fallback
+
+Use `tea api` when no subcommand has the necessary option:
 
 ```bash
 tea api '/repos/{owner}/{repo}/issues?state=open'
@@ -226,11 +255,11 @@ tea api -X POST '/repos/{owner}/{repo}/issues' -f title='Title' -f body='Body'
 tea api -X POST '/repos/{owner}/{repo}/issues' -d @issue.json
 ```
 
-Use `-F` for typed JSON values (`true`, `123`, `null`, arrays/objects), `-f` for strings, and `-d @file` for raw JSON.
+Use `-F` for typed JSON. Use `-f` for strings. Use `-d @file` for raw JSON.
 
 ## Verification
 
-After any write operation:
+After a write operation, read the changed object:
 
 ```bash
 tea issue <number> --output json
@@ -238,4 +267,4 @@ tea pr <number> --output json
 tea release list --output json
 ```
 
-Report the affected URL/index and the command-level outcome.
+Give the affected URL or index and the command result.

@@ -1,88 +1,107 @@
 ---
 name: datastar-templ
-description: Datastar-first Go/templ web development. Use for any web UI, route, templ component, server-rendered interaction, or Datastar attribute/SSE work.
+description: Defines Datastar-first Go/templ development. Use for web UIs, routes, templ components, server-rendered interactions, Datastar attributes, and SSE.
 ---
 
-# Datastar + templ
+# Datastar and templ
 
-Datastar first for web. Prefer server-rendered HTML with templ, Datastar attributes, and SSE over SPA/client state.
+Use server-rendered templ HTML, Datastar attributes, and SSE. Do not create SPA state without a product requirement.
 
-## Source of truth
+## Source data
 
-Before non-trivial Datastar work, inspect official repo/docs/examples in `~/repos/datastar-dev`:
+Examine these official `~/repos/datastar-dev` files before nontrivial work:
 
-- `site/reference/attributes.templ` — attribute names, casing, modifiers.
-- `site/reference/sse_events.templ` — SSE event semantics.
-- `site/reference/sdks.templ` — SDK helpers.
-- `site/examples/*.templ` and `site/examples/*.go` — component and interaction patterns.
+- `site/reference/attributes.templ`: names, capitalization, and modifiers.
+- `site/reference/sse_events.templ`: SSE event behavior.
+- `site/reference/sdks.templ`: SDK helpers.
+- `site/examples/*.templ` and `*.go`: component and interaction patterns.
 
-Use `datastar-bootstrap` for base layout, route tree, `shared.templ`, `RenderPage`, static assets, hot reload, and feature organization.
+Use `datastar-bootstrap` for layouts, route trees, shared files, assets, and hot reload.
 
-## Skill stack for UI work
+## Applicable skills
 
-When planning or implementing web UI, explicitly load/apply:
+Use the applicable skills for UI work:
 
-1. `datastar-bootstrap` — new app/route tree/base layout/static/hotreload/shared setup.
-2. `datastar-templ` — templ components and Datastar attributes/interactions.
-3. `datastar-cqrs` — command routes, `/updates` streams, and event bus fanout.
-4. `datastar-fat-morph` — coarse morph target strategy.
-5. `datastar-css` — semantic HTML and modern nested CSS.
-6. `datastar-debugging` — Datastar/Rocket/StellarUI runtime debugging; user-run hot reload only, add logs, do not run/test yourself.
-7. `go-style` — Go implementation style.
-8. `test-driven-development` when behavior/logic changes outside datastar-dev debugging.
+1. `datastar-bootstrap`: app and route setup.
+2. `datastar-templ`: templ and Datastar interactions.
+3. `datastar-cqrs`: commands, streams, and event bus.
+4. `datastar-fat-morph`: patch boundaries.
+5. `datastar-css`: semantic HTML and nested CSS.
+6. `datastar-debugging`: user-run runtime debugging.
+7. `go-style`: Go implementation.
+8. `test-driven-development`: behavior changes that are not Datastar debugging.
 
-UI plans should name these applicable skills instead of only saying “use Datastar”.
+Name these skills in UI plans.
 
-## CSS token gate
+## CSS gate
 
-Any UI change that adds or edits CSS must apply `datastar-css` before editing and during final review. Every project-authored design value must be consumed through a CSS custom property. Search `stellar.css` and `stellarui.css` first; add a scoped variable only when no matching Stellar token exists. Do not report UI work complete while added declarations contain hard-coded colors, spacing, sizes, radii, shadows, timing, or layout measures.
+Use `datastar-css` before each CSS change and during the last examination.
 
-## templ component shape
+- Use CSS custom properties for all project design values.
+- Examine `stellar.css` and `stellarui.css` first.
+- Add a scoped variable only when no applicable Stellar token exists.
+- Do not keep literal project colors, spacing, sizes, radii, shadows, timing, or layout measures.
 
-- Keep page wrapper and app fragment separate:
-  - `templ feature(u *auth.User, model *FeatureModel)` for page/demo wrapper.
-  - `templ featureApp(model *FeatureModel)` for coarse morph target.
-  - Small repeated components allowed when reused or clarity warrants it.
-- Hard ban `<form>` in Datastar app pages. Use signal-bound controls plus explicit `data-on:*` actions and Datastar requests.
-- Prefer semantic HTML: `main`, `section`, `article`, `header`, `footer`, `nav`, `fieldset`, `label`, `button`, `table` as appropriate.
-- Put stable IDs on coarse morph targets.
-- Put Datastar setup (`data-init`) on the coarse owner element (`body`, `main`, or app `<section>`), not random leaves.
-- Use `templ.JSONString`/typed structs for signal payloads. Avoid string-building JSON.
-- Use SDK helpers like `datastar.GetSSE`, `PostSSE`, `PatchSSE`, `PutSSE`, `DeleteSSE` when composing templ attributes.
+## Components
 
-## Datastar attributes
+- Keep `feature(...)` as the page wrapper.
+- Keep `featureApp(...)` as the coarse morph target.
+- Add small components only for reuse or clarity.
+- Do not use `<form>` in Datastar app pages.
+- Use signal-bound controls and explicit `data-on:*` actions.
+- Use semantic HTML. Give controls names and labels for accessibility.
+- Give coarse morph targets stable IDs.
+- Put `data-init` on `body`, `main`, or the app root.
+- Use typed structs and `templ.JSONString` for signals.
+- Do not construct JSON with strings.
+- Use SDK helpers such as `GetSSE`, `PostSSE`, `PatchSSE`, `PutSSE`, and `DeleteSSE`.
 
-- Signals use camelCase internally; kebab-case attribute keys map to camelCase. When referencing a signal in an expression, use camelCase (`$queryLoading`), not kebab-case (`$query-loading`). This also applies to indicator signals from `data-indicator:query-loading`: the generated signal is `$queryLoading`.
-- Put `data-signals` before `data-init` when init depends on signal existence.
-- Use `data-bind` for control state and `data-on:*` for event logic. Trigger queries/commands directly from controls; never route interaction through form submission or `requestSubmit()`.
-- Event attributes must use the colon form: `data-on:input`, `data-on:click`. Do **not** write `data-on-input` or `data-on-click`; Datastar will not register those as event handlers.
-- Datastar handler values are expressions, not arbitrary JS statement blocks.
-  Avoid statement syntax such as `if (...) ...` after a semicolon. Use an
-  expression form instead, e.g.
-  `console.log('x', $foo), ($foo ? location.href = '/path?q=' + encodeURIComponent($foo) : null)`.
-- If a handler needs multiple actions, use comma expressions or move logic into
-  a small named browser function; do not rely on `; if (...)` inline.
-- For custom elements/web components, copy proven upstream binding patterns exactly before adding event handlers or workarounds.
-- Keep inline expressions short. If logic grows, move it server-side.
-- Use indicators only when useful. Put `data-indicator:*` on every element that initiates the backend request (`data-on:*`/`data-init` with `@get`/`@post`), not only on an ancestor, sibling, result panel, or unrelated display element. An ancestor indicator can initialize the signal but does not reliably track child-initiated requests. If several controls trigger the same request family, repeat the same indicator key on each triggering element and read one camelCase signal (e.g. `data-indicator:query-loading` on the editor, switch, and init owner; spinner uses `data-show="$queryLoading"`). For `data-init` fetches, ensure the indicator signal is created before the fetch request is initialized.
-- Use `data-ignore-morph` only for genuinely client-owned islands/canvas/third-party widgets.
+## Attributes
 
-## Stateful custom elements and code editors
+- Use camelCase signal names in expressions.
+- Kebab-case attribute keys map to camelCase signals.
+- Put `data-signals` before a dependent `data-init`.
+- Use `data-bind` for control state.
+- Use colon event names, such as `data-on:input` and `data-on:click`.
+- Do not use `data-on-input` or `data-on-click`.
+- Handler values are expressions, not JavaScript statement blocks.
+- Use comma expressions for multiple actions.
+- Move longer logic to a named browser function or the server.
+- Copy upstream custom-element binding patterns before you add workarounds.
+- Keep inline expressions short.
+- Use indicators only when they give useful feedback.
+- Put the same `data-indicator:*` key on each element that starts the request.
+- An ancestor indicator does not reliably track requests from child elements.
+- Create an init indicator signal before its fetch starts.
+- Use one camelCase indicator signal for controls in one request family.
+- Use `data-ignore-morph` only for necessary client-owned islands.
 
-Treat rich web components as stateful client-owned islands unless proven otherwise. In particular, `stellar-code-editor`/CodeMirror instances derive internal DOM, language extensions, measurements, scroll, focus, and theme CSS variables at runtime.
+## Stateful custom elements
 
-Rules:
+Keep rich custom elements stable after mount. This includes `stellar-code-editor` and CodeMirror.
 
-- Do not patch/replace a mounted code editor just to change format, language, value, visibility, or result text. Keep one stable editor DOM node mounted and update props/signals (`value`, `languageSrc`, diagnostics) instead.
-- Do not render separate RON and JSON code editors and toggle them with `data-show`; switching can initialize a different editor and cause theme/measurement/focus flicker. Use one editor with a mode signal and a value expression.
-- If a switch updates results plus editor mode, patch signals first (`resultJSON`, `resultRON`, `format`, diagnostics) and patch only status/metadata HTML. Avoid `PatchElementTempl` for the editor/result region unless the editor is first created or intentionally removed.
-- If replacing a surrounding region is unavoidable, put the editor in a stable child with `data-ignore-morph` and update it via bound signals/props, not HTML replacement.
-- After adding a RON/JSON or light/dark-adjacent control, verify in the browser that switching does not change app color mode, code-editor theme, focus, scroll, or text selection.
-- For CodeMirror-backed readonly viewers, keep the editor focusable/selectable: use CodeMirror `readOnly` state for write protection, but do not set `EditorView.editable`/`contenteditable` false unless the control is truly disabled. CodeMirror `drawSelection` hides native selection and paints only a background layer behind content; it cannot invert selected token foreground colors. If selected text must invert foreground/background, prefer native selection (`::selection`) instead of `drawSelection`, set selected `background: var(--code-editor-fg)` and `color: var(--code-editor-bg)`, and keep `.cm-content` background transparent so any selection layer/native highlight is not hidden.
+- Do not replace an editor to change value, language, format, visibility, or results.
+- Update values, language, and diagnostics through signals or properties.
+- Use one editor for RON and JSON modes.
+- Do not toggle different editors with `data-show`.
+- Patch result signals before status or metadata HTML.
+- Patch the editor region only for initial creation or intentional removal.
+- If parent HTML must change, put the editor in a stable `data-ignore-morph` child.
+- Test mode switches in a browser.
+- Make sure color mode, theme, focus, scroll, and selection do not change.
+
+For read-only CodeMirror controls:
+
+- Use CodeMirror `readOnly` for write protection.
+- Keep the editor focusable and selectable.
+- Do not disable `EditorView.editable` or `contenteditable` unless the control is disabled.
+- `drawSelection` paints a background behind content and cannot invert token colors.
+- Use native `::selection` when selected text must invert colors.
+- Keep `.cm-content` transparent so it does not hide selection.
 
 ## StellarUI color mode
 
-For app shells using `stellar-button-color-mode`, let the page root own the resolved dark class. Bind the control only to the persisted user choice (`light`/`dark`/`system`) and use `data-match-media` on `<html>` for OS/browser system changes:
+Let the page root calculate the dark class. Persist only the user choice.
 
 ```templ
 <html
@@ -97,66 +116,67 @@ For app shells using `stellar-button-color-mode`, let the page root own the reso
 ></stellar-button-color-mode>
 ```
 
-Rules:
+- Do not bind `data-bind:is-dark` for the app theme class.
+- Do not add `$mode`, a static `mode` attribute, `scope="shell"`, or manual synchronization handlers.
+- Do not persist `$systemDark`.
+- Slotted controls use the same root calculation and mode-property binding.
+- For debugging, clear stale persisted signals and local storage.
+- Log `$colorMode`, `$systemDark`, the root class, and the system media query.
+- Copy event values before asynchronous debug callbacks.
 
-- Do not bind `data-bind:is-dark` for the app-level theme class. Component `value` can miss external system preference transitions; root `data-match-media` is the reliable page-level source.
-- Do not introduce a separate `$mode` signal, static `mode="dark"` attr, `scope="shell"`, or manual `data-on:input/change` sync handlers.
-- Keep `data-persist` scoped to `colorMode` only; do not persist the derived system-dark boolean.
-- If the control is slotted inside another Rocket/StellarUI custom element such as `stellar-toolbar`, keep the same page-level root computation; only the control's `mode` prop needs binding.
-- If debugging, clear stale persisted Datastar signals/localStorage and log `$colorMode`, `$systemDark`, `document.documentElement.className`, and `matchMedia('(prefers-color-scheme: dark)').matches`.
-- Debug click logs must not read `evt.currentTarget` inside `setTimeout`; Datastar/browser event objects may be cleared. Copy values first or log synchronously.
+## Same-route requests
 
-## Same-route Datastar requests
+Use same-route requests before you add an `/updates` route.
 
-Prefer same-route progressive enhancement before adding dedicated `/updates` endpoints:
+- Detect Datastar with the `Datastar-Request` header.
+- Use `Accept` when one route serves HTML, JSON, or SSE.
+- Render browser navigation with `RenderPage(...)`.
+- For Datastar requests, create SSE and patch coarse content or signals.
+- Keep shared HTTP helpers in `shared.go`.
+- Keep shared templ components in `shared.templ`.
+- Add `/updates` only when live push needs its own product route.
 
-- Detect Datastar requests with `r.Header.Get("Datastar-Request") != ""`.
-- Use `Accept` for route mode when one path serves HTML, JSON, and/or SSE. Example: default/no `Accept` renders HTML, `Accept: application/json` returns JSON API, and `Accept: text/event-stream` opens the Datastar stream.
-- On normal navigation, render the full page with `RenderPage(...)`.
-- On Datastar requests for the same route, create `datastar.NewSSE(w, r)` and patch the route's coarse content target/signals.
-- Factor shared HTTP helpers (`RenderPage`, Datastar request detection, `Accept` parsing/content negotiation helpers) into `shared.go`; shared templ components stay in `shared.templ`.
-- Use dedicated long-lived `/updates` streams only when the page needs a separate product route for push updates; most pages should use same-route `Accept: text/event-stream` streams initialized with `data-init`.
+## Concurrent skeleton loading
 
-## Skeleton + concurrent patch loading
+Use a fast skeleton when cards have different latency.
 
-For dashboards/ops pages where independent cards have different latency, prefer a fast skeleton page plus same-route Datastar SSE patches:
+1. Render placeholders with target IDs and `aria-busy="true"`.
+2. Start same-route loading from the coarse owner.
+3. Use `filterSignals: {include: /^$/}` when the request needs no app signals.
+4. Load each model in a goroutine.
+5. Send components through a channel to one SSE writer.
+6. Do not write SSE from worker goroutines at the same time.
+7. Patch a complete card or section with its target ID.
+8. Patch a local error component when one card fails.
 
-- Initial HTML renders stable placeholder elements/cards with final target IDs and `aria-busy="true"`.
-- Put `data-init="@get('/route', {filterSignals: {include: /^$/}})"` on the coarse owner so the skeleton self-loads without sending app signals.
-- Datastar request handler starts independent read/model calls in goroutines and streams each completed card/section with `sse.PatchElementTempl(...)`.
-- Never write SSE concurrently from goroutines. Send rendered components/results over a channel and have one goroutine serialize all `PatchElementTempl` calls.
-- Patch the complete card/section containing the target ID, not just inner text; replacement should clear busy/loading state and be reconnect-safe for that section.
-- On per-card failures, patch that card's target with an inline error component; keep the rest of the skeleton/page usable.
-- Use this pattern when it improves perceived latency or avoids one slow stat blocking unrelated cards. If all data is cheap, render the full page synchronously.
+Render the full page synchronously when all data is inexpensive.
 
 ## Guided flows
 
-For complex write/save/manage flows, prefer TurboTax-style inline wizard panels over modals:
+Use inline step panels for complex write flows:
 
-- one primary task/action per step
-- visible milestones/progress
-- backend-confirmed validation/preview before commit/save
-- inline errors in the current page frame
-- right sidebar for contextual help/properties/raw details
-- success panels with next useful actions
-- no modals unless inline review cannot make destructive risk clear enough
+- One primary action in each step.
+- Show progress.
+- Server-confirmed validation before save.
+- Inline errors and contextual help.
+- A success panel with useful next actions.
+- No modal unless inline review cannot show destructive risk clearly.
 
 ## Defaults
 
-- Query/read endpoints may stream HTML directly.
-- Commands mutate, publish an internal event bus message, and return `204 No Content`; updates arrive through same-route Datastar responses or a page stream when live push is required.
-- Prefer coarse/fat morph updates over fine-grained append/remove when correctness matters.
-- Prefer compression (`datastar.WithCompression()`) for streams that send repeated or coarse fragments.
+- Queries can stream HTML.
+- Commands change state, emit an event, and return `204 No Content`.
+- Use same-route SSE or a page stream for live updates.
+- Use coarse morphs when correctness is important.
+- Use compression for coarse stream fragments.
 
 ## Verification
 
-For ordinary Go/templ changes, run project validation. Typical:
+For Go/templ work that is not runtime debugging, use the project task runner. Typical commands:
 
 ```bash
 templ generate
 go test ./...
 ```
 
-Use the repository's task runner if present.
-
-Exception: when debugging Datastar/datastar-dev runtime behavior, use `datastar-debugging`: do not run/build/test/start/kill yourself; rely on the user's hot-reload session and pasted logs.
+For Datastar runtime debugging, follow `datastar-debugging`. Do not run the app or tests in that workflow.

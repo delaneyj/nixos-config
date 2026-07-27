@@ -1,47 +1,47 @@
 ---
 name: no-unauthorized-commits
-description: Mandatory commit safety gate. Use before any git commit, after any user message containing commit/done/next/continue/finish/ship/complete, and when working with incremental-implementation or git-workflow-and-versioning.
+description: Enforces commit authorization. Use before git commit and after user messages that contain commit, done, next, continue, finish, ship, or complete.
 ---
 
-# No Unauthorized Commits
+# Commit Authorization
 
-Hard rule: never run `git commit` unless the human explicitly asks for a commit in the current turn.
+Do not run `git commit` without a clear instruction in the current user message.
 
-Requests to create/update an issue, create/switch a branch, open a PR, stage files, push a branch, or prepare work are not commit authorization.
+Issue, branch, PR, stage, push, and preparation instructions do not give commit authorization.
 
-## Gate before `git commit`
+## Gate
 
-All must be true:
+Before `git commit`, make sure all answers are yes:
 
-1. The current user message explicitly asks to commit.
-2. No `git commit` has already run since that request.
-3. The commit includes only work completed before that request.
-4. The request is not merely `next`, `continue`, `finish`, `done`, `ship`, `complete`, `verify`, or similar.
+1. Does the current user message contain a clear commit instruction?
+2. Has no commit occurred since that request?
+3. Does the commit contain only work completed before that request?
+4. Is the request more explicit than `next`, `done`, `finish`, `ship`, `complete`, or `verify`?
 
-If any answer is no/unclear: do not commit. Report uncommitted changes.
+If one answer is no or unclear, do not commit. Report the uncommitted changes.
 
 ## Compound requests
 
-`commit and next step`, `commit and continue`, `commit then keep going` mean:
+For `commit and continue`, `commit then next`, or requests with the same meaning:
 
-1. Commit already-completed work exactly once.
-2. Permission is spent immediately after that one commit.
-3. Do later work uncommitted.
-4. Report later work as uncommitted.
+1. Make one commit of completed work.
+2. Spend the authorization after that commit.
+3. Continue work after the commit without a new commit.
+4. Report work after the commit as uncommitted.
 
-Never commit the later work from the same authorization.
+Do not include work done after the commit in the commit with authorization.
 
-## Replacement for misleading skill text
+## Conflicting instructions
 
-If another skill says to commit each slice, interpret it as:
+If a different skill requires a commit for each slice, use this replacement:
 
-- test the slice
-- verify the slice
-- report uncommitted changes
-- wait for explicit current-turn commit authorization
+1. Test the slice.
+2. Make sure the slice works.
+3. Report it as uncommitted.
+4. Wait for a new clear commit instruction.
 
-## Required final wording after uncommitted work
+## Required report text
 
-End with:
+End each report of work done after the commit with:
 
 `Uncommitted: <short summary>. Say "commit" if you want this committed.`

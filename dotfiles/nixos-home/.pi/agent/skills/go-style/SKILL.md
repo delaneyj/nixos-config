@@ -1,186 +1,175 @@
 ---
 name: go-style
-description: Go code style preferences. Use when editing Go code, especially value/domain types, encoding/decoding, key serialization, composite literals, helper functions, and file organization.
+description: Defines Go code style. Use for domain types, encoding, serialization, composite literals, helpers, variables, control flow, and file organization.
 ---
 
 # Go Style
 
-Apply these style choices when writing or refactoring Go code.
+Use these rules for all Go changes.
 
-## File organization
+## Files
 
-- Prefer one file per concrete type, domain concept, or wire kind.
-  - Example: `matrix2.go`, `matrix3.go`, `matrix4.go` rather than a combined `matrix.go`.
-- Put type-specific encode/decode/append/marshal helpers in the file for that type.
-- Keep central files for shared dispatch, interfaces, or low-level reusable helpers only.
+- Use one file for each concrete type, domain concept, or wire kind.
+- Examples: `matrix2.go`, `matrix3.go`, and `matrix4.go`.
+- Keep type-specific encoding and serialization with its type.
+- Keep central files only for shared dispatch, interfaces, and reused low-level helpers.
 
-## Naming
+## Names
 
-- Do not all-caps domain acronyms in Go identifiers unless they are standard Go initialisms. Prefer `OwlSource`, `RonValue`, and `RdfTerm` over `OWLSource`, `RONValue`, and `RDFTerm`.
+Use standard Go initialisms only. Do not use all-capital domain acronyms. Use `OwlSource`, `RonValue`, and `RdfTerm`.
 
-## Domain types and interfaces
+## Domain types
 
-- Owned concrete domain types should implement relevant interfaces directly.
-- Avoid adapter/wrapper structs for owned concrete types when methods can be placed on the type itself.
-- Wrapper types are acceptable when Go requires them for primitives, external types, interface boundaries, or when they preserve public API behavior intentionally.
+- Put applicable interface methods directly on owned concrete types.
+- Do not add an adapter when the owned type can have the method.
+- Use wrappers only for primitives, external types, interface boundaries, or necessary public API behavior.
 
-## Serialization and key encoding
+## Serialization
 
-- Prefer each type owning its own serialization methods.
-- Avoid central type-switches for behavior that naturally belongs on the type, such as ordered key encoding.
-- Shared helpers are fine for repeated mechanics, e.g. ordered numeric sequences or raw binary append loops.
-- Hard ban JSON intermediates when producing RON from an existing Go value. Use `ron.Marshal`, `ron.MarshalCompact`, `ron.MarshalInto`, or `ron.NewEncoder` directly.
-- Never call `json.Marshal`/`json.MarshalIndent` on a Go value and feed those bytes to `ron.FromJSON`/`ron.FromJSONCompact`.
-- `ron.FromJSON` is only for genuinely JSON-originated bytes when no Go value is available, such as user JSON input, captured JSON middleware output, or a JSON wire payload.
-- Before finishing RON work, search for JSON-marshal-to-`FromJSON` chains and remove every avoidable chain.
+- Let each type own its serialization methods.
+- Do not use a central type switch for behavior that belongs to a type.
+- Use shared helpers only for mechanics with more than one use.
+- Do not use JSON between a Go value and RON.
+- Use `ron.Marshal`, `ron.MarshalCompact`, `ron.MarshalInto`, or `ron.NewEncoder` directly.
+- Do not send `json.Marshal` output to `ron.FromJSON` or `ron.FromJSONCompact`.
+- Use `ron.FromJSON` only for bytes that originate as JSON.
+- Before completion, find and remove avoidable JSON-to-RON chains.
 
-## Variadics
+## Variadic parameters
 
-- Prefer variadic parameters for helper APIs that consume homogeneous values and do not need callers to pre-build or retain a slice; actively check new and touched helpers for this shape.
-- Keep explicit slice parameters when the input is naturally a collection, caller ownership/capacity matters, nil-vs-empty is semantically meaningful, or avoiding allocation is important.
-- When forwarding a slice to a variadic helper, use slice expansion (`values...`) instead of rebuilding the slice.
+- Use variadic parameters for homogeneous values when callers do not need a slice.
+- Use a slice when ownership, capacity, nil meaning, or allocation is important.
+- Use `values...` when you send a slice to a variadic function.
 
-## Raw append helpers
+For primitive encoding with more than one use, add generic variadic append helpers:
 
-- Prefer generic variadic append helpers for repeated homogeneous primitive encoding.
-  - Example shape:
-    ```go
-    func appendRawInt64[T ~int64](dst []byte, values ...T) []byte
-    func appendRawUint64[T ~uint64](dst []byte, values ...T) []byte
-    ```
-- Use slice expansion for fixed numeric arrays where possible:
-  ```go
-  appendRawInt64(dst, v[:]...)
-  appendRawFloat64s(dst, v[:]...)
-  ```
+```go
+func appendRawInt64[T ~int64](dst []byte, values ...T) []byte
+func appendRawUint64[T ~uint64](dst []byte, values ...T) []byte
+```
 
-## Composite literal formatting
+Use slice expansion for fixed arrays:
 
-- Prefer multiline keyed composite literals by default, including `var`, `const`-adjacent config values, returns, and nested fields.
-- Avoid single-line keyed composite literals except tiny local test fixtures where readability is clearly better.
-- Align keyed fields with `gofmt`:
-  ```go
-  var Line3Meta = Meta{
-      WireName: "line3",
-      Label:    "Line 3",
-      Icon:     "material-symbols:process-chart",
-      Group:    GroupGeometry,
-      Example:  "start → end",
-  }
-  ```
-- Format keyed returns as multiline literals:
-  ```go
-  return Sphere{
-      Center: center,
-      Radius: math.Sqrt(maxRadiusSq),
-  }
-  ```
-- Format nested keyed literals as multiline/nested blocks:
-  ```go
-  return Box2{
-      Min: Float64V2{
-          math.Inf(1), math.Inf(1),
-      },
-      Max: Float64V2{
-          math.Inf(-1),
-          math.Inf(-1),
-      },
-  }
-  ```
-- Apply this consistently to decode/unmarshal/constructor returns too.
+```go
+appendRawInt64(dst, v[:]...)
+appendRawFloat64s(dst, v[:]...)
+```
 
-## Long argument lists
+## Composite literals
 
-- Break long helper calls across lines, especially serialization calls with many values:
-  ```go
-  return appendRawFloat64s(
-      appendHeader(dst, sphereKind),
-      v.Center[0], v.Center[1], v.Center[2],
-      v.Radius,
-  )
-  ```
+Use multiline keyed literals by default. This includes variables, returns, configurations, constructors, and decoded values.
 
-## Control-flow spacing
+```go
+var Line3Meta = Meta{
+    WireName: "line3",
+    Label:    "Line 3",
+    Icon:     "material-symbols:process-chart",
+    Group:    GroupGeometry,
+}
+```
 
-- Separate logical phases with blank lines.
-- Add a blank line after early-return guard blocks before starting the next phase.
-- Add a blank line before final fallback/default return when it follows a non-trivial conditional block.
+Use a single line only for a very small local test fixture when it is clearer.
 
-## Variable declarations
+Use multiline nested literals:
 
-- Group related zero-value declarations in a var block when they share a scope and are assigned later:
-  ```go
-  var (
-      resumedBytes int64
-      file         *os.File
-  )
-  expectedSize := int64(-1)
-  ```
-- Prefer `:=` with explicit conversion for non-zero sentinel initializers over typed `var` initializers:
-  ```go
-  expectedSize := int64(-1)
-  ```
+```go
+return Box2{
+    Min: Float64V2{
+        math.Inf(1), math.Inf(1),
+    },
+    Max: Float64V2{
+        math.Inf(-1), math.Inf(-1),
+    },
+}
+```
 
-## Helpers
+Break long calls across lines:
 
-- Hard ban: do not add single-use package-level funcs, vars, consts, or types.
-- Tests do not justify a package-level production helper. If production has one call and tests have more calls, inline it in production and duplicate or localize test setup.
-- Do not evade this by exporting a declaration. Exported single-use declarations are worse unless required by an existing interface, route/API boundary, recursion, generic reuse, or multiple production call sites.
-- Prefer local closures or inline blocks over new package-level declarations for one-off sequencing.
-- Before finishing any Go change, inspect every new package-level declaration in `git diff`. For each, run a usage search. If it has fewer than two production call sites and is not one of the allowed exceptions, remove or inline it before reporting done.
+```go
+return appendRawFloat64s(
+    appendHeader(dst, sphereKind),
+    v.Center[0], v.Center[1], v.Center[2],
+    v.Radius,
+)
+```
 
-## Ignored return values
+## Control flow
 
-- Do not write blank assignments for returns that can be safely discarded. Call the function directly instead.
-  - Prefer: `hash.Write([]byte("sqlite\x00"))`
-  - Avoid: `_, _ = hash.Write([]byte("sqlite\x00"))`
-- Keep explicit ignored assignments only when they add signal for real error-producing APIs or satisfy an interface/control-flow need.
+- Put a blank line between logical phases.
+- Put a blank line after an early-return guard.
+- Put a blank line before the last fallback after a nontrivial conditional block.
+
+## Variables
+
+Group related zero-value variables that have the same scope:
+
+```go
+var (
+    resumedBytes int64
+    file         *os.File
+)
+expectedSize := int64(-1)
+```
+
+Use `:=` with explicit conversion for nonzero sentinel values.
+
+## Package-level declarations
+
+Do not add a single-use package-level function, variable, constant, or type.
+
+- Tests do not count as production uses.
+- Export does not justify one production use.
+- Inline one-off logic or use a local closure.
+- Exceptions: required interfaces, API boundaries, routes, recursion, generic reuse, or two production call sites.
+
+Before completion:
+
+1. Examine each new package-level declaration in `git diff`.
+2. Find each production use.
+3. Remove or localize declarations with fewer than two production call sites.
+4. Keep an exception only when it matches the list above.
+
+## Ignored returns
+
+Call a function directly when all returned values can be safely discarded.
+
+```go
+hash.Write([]byte("sqlite\x00"))
+```
+
+Do not write:
+
+```go
+_, _ = hash.Write([]byte("sqlite\x00"))
+```
+
+Use explicit ignored assignments only for error-producing APIs or interface and control-flow requirements.
 
 ## Validation
 
-After major Go changes, run gopls, the repository's normal Go validation command, and a Go binary build; all must pass cleanly before reporting completion.
+After an important Go change, run gopls, usual Go validation, and a binary build.
 
-Prefer project-local gopls if available:
+Use project-local gopls when available:
 
 ```bash
 go tool gopls check ./path/to/changed.go
 ```
 
-If gopls is not installed as a tool, use `gopls check` when available in PATH.
-
-For Nix flake projects without gopls, add `gopls` to the dev shell packages in `flake.nix`, then run gopls through the shell:
-
-```nix
-packages = with pkgs; [
-  go_1_25
-  gopls
-];
-```
+If not, use `gopls check`. In Nix projects, add `gopls` to the development shell when necessary.
 
 ```bash
 nix develop --command gopls check ./path/to/changed.go
 ```
 
-Do not use `gopls check ./...`; gopls treats `./...` as a file path in some versions. To check all non-generated Go files, pass explicit file paths, for example:
+Do not use `gopls check ./...`. Give gopls explicit non-generated Go file paths.
 
 ```bash
 nix develop --command gopls check $(find cmd internal web -name '*.go' -not -name '*_templ.go' -print)
 ```
 
-Prefer the project-specific test task if one exists; otherwise use:
+If the project has test and build tasks, use them. If not, run:
 
 ```bash
 go test ./...
-```
-
-Also verify the application binary builds before finishing Go work. Prefer the project build task if one exists:
-
-```bash
-task build
-```
-
-If there is no project build task, build changed main packages explicitly, for example:
-
-```bash
 go build ./cmd/...
 ```

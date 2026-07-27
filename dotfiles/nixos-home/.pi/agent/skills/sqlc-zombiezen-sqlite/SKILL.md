@@ -1,27 +1,25 @@
 ---
 name: sqlc-zombiezen-sqlite
-description: sqlc + sqlc-gen-zombiezen setup for Go services using zombiezen.com/go/sqlite. Use when adding SQLite-backed services, SQL migrations/queries, sqlc.yaml configs, generated zz packages, or Taskfile codegen tasks.
+description: Defines sqlc and sqlc-gen-zombiezen setup for Go SQLite services. Use for migrations, queries, sqlc configs, generated zz packages, and code generation.
 ---
 
-# sqlc + zombiezen SQLite
+# sqlc and zombiezen SQLite
 
-Use the `ria-pulse` pattern for SQLite services that generate typed `zombiezen.com/go/sqlite` accessors with `github.com/delaneyj/toolbelt/sqlc-gen-zombiezen`.
+Use the `ria-pulse` pattern with `zombiezen.com/go/sqlite` and `github.com/delaneyj/toolbelt/sqlc-gen-zombiezen`.
 
-## Source example
+## Source data
 
-Reference `~/repos/ria-pulse`:
+Examine `~/repos/ria-pulse`:
 
-- `Taskfile.yml` — `tools`, `sqlc`, `templ`, `build` task wiring.
-- `go.mod` — `tool (...)` entries for `sqlc`, `templ`, `buf`, `sqlc-gen-zombiezen`.
-- `services/*/sql/sqlc.yaml` — per-service sqlc config.
-- `services/*/sql/migrations/*.sql` — embedded migrations.
-- `services/*/sql/queries/*.sql` — named sqlc queries.
-- `services/*/server.go` — embedded migrations + `db.NewDatabase` setup.
-- `services/*/service.go` / `db.go` — `ReadTX`/`WriteTX` with generated `zz` calls.
+- `Taskfile.yml`: tool, sqlc, templ, and build tasks.
+- `go.mod`: tool entries.
+- `services/*/sql/sqlc.yaml`: service configurations.
+- `services/*/sql/migrations/*.sql`: embedded migrations.
+- `services/*/sql/queries/*.sql`: named queries.
+- `services/*/server.go`: migration and database setup.
+- `services/*/service.go` and `db.go`: transactions and generated calls.
 
-## Directory layout
-
-Per SQLite-backed service:
+## Service files
 
 ```text
 services/<service>/
@@ -34,14 +32,14 @@ services/<service>/
       0001_next_change.sql
     queries/
       <domain>.sql
-    zz/              # generated, gitignored
+    zz/              # generated and ignored by git
 ```
 
-Keep each service's schema and queries local. Do not centralize unrelated service SQL.
+Keep each schema and its queries in the service. Do not combine unrelated service SQL.
 
-## sqlc config
+## sqlc configuration
 
-Use a per-service `sql/sqlc.yaml`:
+Put this configuration in each `sql/sqlc.yaml`:
 
 ```yaml
 version: "2"
@@ -60,85 +58,74 @@ sql:
         plugin: zz
 ```
 
-Run `sqlc generate` from the `sql/` directory so relative paths resolve.
+Run `sqlc generate` from the `sql` directory. Relative paths depend on that directory.
 
-## Taskfile wiring
+## Taskfile
 
-Root task pattern:
+- Add `sqlc-gen-zombiezen` to the tool installation task.
+- Install it in the repository `bin` directory.
+- Make the `sqlc` task depend on tools.
+- Add repository `bin` to `PATH`.
+- Find all `sqlc.yaml` files.
+- Track SQL and sqlc configuration files as sources.
+- Track `zz/*.go` as generated files.
+- Run `go tool sqlc generate` in each configuration directory.
+- Make build tasks depend on `sqlc`.
 
-```yaml
-tasks:
-  tools:
-    deps/source inputs: go.mod/go.sum
-    cmds:
-      - mkdir -p bin
-      - GOBIN={{.ROOT_DIR}}/bin go install github.com/delaneyj/toolbelt/sqlc-gen-zombiezen@latest
+Core command:
 
-  sqlc:
-    deps: [tools]
-    env:
-      PATH: "{{.ROOT_DIR}}/bin:{{.PATH}}"
-    vars:
-      SQLC_CONFIGS:
-        sh: find . -name sqlc.yaml
-    sources:
-      - "**/*.sql"
-      - "**/sqlc.yaml"
-    generates:
-      - "**/zz/*.go"
-    cmds:
-      - |
-        {{- $root := .ROOT_DIR -}}
-        {{- range $config := (splitLines .SQLC_CONFIGS) }}
-          dir=$(dirname "{{$config}}")
-          echo ">> go tool sqlc generate ($dir)"
-          (cd "$dir" && PATH="{{$root}}/bin:$PATH" go tool sqlc generate)
-        {{- end }}
+```bash
+dir=$(dirname "$config")
+(cd "$dir" && PATH="$root/bin:$PATH" go tool sqlc generate)
 ```
 
-Build tasks should depend on `sqlc` before `go build`.
-
-## Gitignore
-
-Generated DB accessors are build artifacts:
+Ignore generated accessors and local tools:
 
 ```gitignore
 zz
+bin
 ```
 
-Also ignore local tool bins if using the root `bin/` pattern.
+Use the repository convention when the repository tracks `bin`.
 
 ## Migrations
 
-- Store ordered migrations in `sql/migrations` with `0000_schema.sql`, `0001_*.sql`, etc.
-- In `server.go`:
-  ```go
-  //go:embed sql/migrations/*.sql
-  var migrationsFS embed.FS
-  ```
-- Load/apply via toolbelt DB helpers:
-  ```go
-  migrations, err := db.MigrationsFromFS(migrationsFS, "sql/migrations")
-  if err != nil { return fmt.Errorf("<service>: load migrations: %w", err) }
+- Use ordered names such as `0000_schema.sql` and `0001_next_change.sql`.
+- Embed `sql/migrations/*.sql` in `server.go`.
+- Load migrations with `db.MigrationsFromFS`.
+- Create the database with `db.NewDatabase` and applicable options.
 
-  database, err := db.NewDatabase(ctx,
-      db.DatabaseWithFilename("data/<service>.db"),
-      db.DatabaseWithMigrations(migrations),
-      db.DatabaseWithShouldClear(env.ResetDatabase),
-  )
-  ```
+```go
+//go:embed sql/migrations/*.sql
+var migrationsFS embed.FS
 
-## Query files
+migrations, err := db.MigrationsFromFS(migrationsFS, "sql/migrations")
+if err != nil {
+    return fmt.Errorf("<service>: load migrations: %w", err)
+}
 
-Prefer generated CRUD before writing custom named queries:
+database, err := db.NewDatabase(
+    ctx,
+    db.DatabaseWithFilename("data/<service>.db"),
+    db.DatabaseWithMigrations(migrations),
+    db.DatabaseWithShouldClear(env.ResetDatabase),
+)
+```
 
-- Use generated `Create*`, `Upsert*`, `ReadAll*`, `ReadByID*`, `Update*`, `Delete*` when they express the operation.
-- Add custom `-- name:` queries only for filters, joins, projections, aggregates, `RETURNING`, bulk operations, or domain-specific SQL not covered by CRUD.
-- Do not duplicate generated CRUD with hand-written named queries unless the custom query has different semantics.
-- Before adding or keeping any `INSERT`, `UPDATE`, `DELETE`, `SELECT ... WHERE id = ?`, `SELECT COUNT(*)`, or `SELECT * FROM <single_table>` query, inspect generated `zz/crud_main_<table>.go` and remove the custom query if CRUD already covers it.
-- Keep custom named queries only when the SQL cannot be expressed by generated CRUD, e.g. FTS `MATCH`, lookup by non-ID unique key, joins, projections, aggregates not generated, bulk `IN`, or `RETURNING` that intentionally omits caller-supplied IDs.
+## Queries
 
-Use sqlc comments:
+Use generated CRUD before custom named queries.
+
+- Use generated create, upsert, read, update, and delete functions when applicable.
+- Add named queries only for different SQL behavior.
+- Examples include joins, filters, projections, aggregates, FTS, bulk operations, and special `RETURNING` clauses.
+- Before custom CRUD, examine `zz/crud_main_<table>.go`.
+- Remove a custom query when generated CRUD has the same behavior.
+- Keep query files cohesive by domain.
+- Use explicit columns. Do not use `SELECT *`.
+- Use `?` or `?1` parameters.
+- Use `sqlc.slice('name')` for `IN` lists.
+- Add `RETURNING` when the caller needs database-generated values.
 
 ```sql
 -- name: ListThings :many
@@ -147,36 +134,25 @@ FROM things
 WHERE owner_id = ?
 ORDER BY name;
 
--- name: InsertThingReturning :one
-INSERT INTO things (id, owner_id, name)
-VALUES (?, ?, ?)
-RETURNING id, owner_id, name;
-
 -- name: DeleteThings :exec
 DELETE FROM things
 WHERE id IN (sqlc.slice('ids'));
 ```
 
-Guidelines:
-
-- Use `?`/`?1` SQLite parameters.
-- Use `sqlc.slice('name')` for `IN` lists.
-- Prefer explicit column lists over `SELECT *`.
-- Add `RETURNING` when the caller needs generated/defaulted fields.
-- Keep domain query files cohesive (`users.sql`, `firm_views.sql`, `metrics.sql`).
-
-## Generated `zz` API
+## Generated API
 
 The plugin generates:
 
-- Model types from tables: `<TableSingular>Model` in `crud_main_<table>.go`.
-- CRUD helpers for tables: `Create*`, `Upsert*`, `ReadAll*`, `ReadByID*`, `Update*`, `Delete*` where applicable.
-- Named query statement types: `<QueryName>Stmt` with `Run(...)`.
-- Convenience one-shot functions: `Once<QueryName>(tx, ...)`.
-- Param structs for multi-param named queries: `<QueryName>Params`.
-- Result structs for ad hoc result sets: `<QueryName>Res`.
+- `<TableSingular>Model` table models.
+- CRUD functions where applicable.
+- `<QueryName>Stmt` with `Run(...)`.
+- `Once<QueryName>(tx, ...)` functions.
+- `<QueryName>Params` for multiple parameters.
+- `<QueryName>Res` for ad hoc results.
 
-Use `Once*` only for one-off calls per transaction. Do not call `zz.Once*` inside loops; it prepares a statement each call. In loops/batches, create the statement once and reuse/reset it via `Run`:
+Use `Once*` only for one call in a transaction. It prepares a statement for each call.
+
+For loops and batches, prepare before the loop and reuse `Run`:
 
 ```go
 return db.WriteTX(ctx, func(tx *sqlite.Conn) error {
@@ -190,11 +166,16 @@ return db.WriteTX(ctx, func(tx *sqlite.Conn) error {
 })
 ```
 
-Generated `Run` methods reset/clear bindings after each call; the reusable stmt owns the prepared SQLite statement for the transaction.
+Generated `Run` methods reset and clear bindings after each call.
 
-## Service usage
+## Service boundary
 
-Always call generated `zz` functions inside explicit DB transactions:
+- Call generated functions only from `ReadTX` or `WriteTX`.
+- Use `WriteTX` for state changes.
+- Keep generated models at the storage boundary.
+- Map them to domain, API, or view types in service code.
+- Do not use `sqlitex.Execute` or `ExecuteTransient` for usual application queries.
+- If raw SQL is necessary, prepare, bind, step, reset, and clear a `sqlite.Stmt`.
 
 ```go
 if err := s.db.ReadTX(ctx, func(tx *sqlite.Conn) error {
@@ -205,38 +186,30 @@ if err := s.db.ReadTX(ctx, func(tx *sqlite.Conn) error {
     if err != nil {
         return err
     }
-    // map zz rows to service/domain types here
+    // Map rows to service types.
     return nil
 }); err != nil {
     return nil, err
 }
 ```
 
-Use `WriteTX` for mutations. Keep `zz` models at the storage boundary; map to API/domain/view types in service code.
-
-Avoid `sqlitex.Execute`/`ExecuteTransient` for application queries unless absolutely necessary. Prefer generated `zz` statements. If raw SQL is unavoidable, prepare a `sqlite.Stmt`, bind explicitly, call `stmt.Step`, and reset/clear bindings in the standard statement pattern.
-
 ## Types
 
-Project preference:
-
-- Use `INTEGER PRIMARY KEY` / `INTEGER` `int64` IDs for all entity IDs and foreign keys. Do not use text IDs unless explicitly required by an external system.
-- Store xxh3 hashes as binary `BLOB` values, not hex/base64 `TEXT`, unless an external API explicitly needs encoded text.
-
-Observed mappings:
-
-- SQLite `INTEGER` -> `int64` or `bool` for boolean-ish columns.
-- Nullable text -> `*string`.
-- Julian day `REAL` timestamps -> `time.Time` via `toolbelt/db` conversions in generated code.
-- JSON columns remain strings unless mapped manually at the service boundary.
+- Use `INTEGER PRIMARY KEY` and `int64` for entity and foreign-key IDs.
+- Use text IDs only when an external system requires them.
+- Store xxh3 hashes as binary `BLOB` values.
+- Use encoded text only for an external API requirement.
+- Map nullable text to `*string`.
+- Map Julian day `REAL` timestamps through `toolbelt/db` time conversions.
+- Keep JSON columns as strings until the service boundary maps them.
 
 ## Verification
 
-After schema/query changes:
+After schema or query changes, run:
 
 ```bash
 task sqlc
 go test ./...
 ```
 
-If the repo has a full build/codegen task, run that instead or after `task sqlc`.
+Use the full repository build or code-generation task if the repository has one.

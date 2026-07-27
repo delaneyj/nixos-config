@@ -1,92 +1,76 @@
 ---
 name: datastar-css
-description: CSS style for Datastar/templ UIs. Use when writing or changing CSS for Datastar-first server-rendered interfaces.
+description: Defines CSS style for Datastar/templ UIs. Use for CSS in Datastar server-rendered interfaces.
 ---
 
 # Datastar CSS
 
-CSS should support semantic HTML and coarse morphing. Keep styling declarative; avoid JS-driven layout/state when CSS can do it.
+Use semantic HTML, CSS state, and coarse morphing. Do not use JavaScript when CSS can do the work.
 
-## HTML first
+## HTML
 
-- Choose semantic elements before classes.
-- Preserve accessible names: labels for inputs, button text/aria-labels, fieldsets/legends where useful.
-- Style states with attributes/classes that Datastar toggles (`data-class:*`, `aria-*`, `hidden`) rather than custom JS.
-- Hard ban `<form>` in Datastar app pages. Prefer project design-system controls for filters and command inputs (for example StellarUI `stellar-text-field`, `stellar-select`, `stellar-button`), bound to signals and explicit Datastar actions.
+- Select semantic elements before classes.
+- Give inputs labels. Give buttons names for accessibility.
+- Use fieldsets and legends when applicable.
+- Style `data-class:*`, `aria-*`, and `hidden` states.
+- Do not use `<form>` in Datastar app pages.
+- Use signal-bound design-system controls and explicit Datastar actions.
 
-## Design tokens are mandatory
+## Design tokens
 
-- Always use CSS custom properties for design values. Do not write literal colors, spacing, font sizes, control sizes, radii, shadows, animation durations, z-index layers, or reusable layout measures in project CSS.
-- Search `stellar.css` and `stellarui.css` first. Reuse the closest existing Stellar variable whenever its semantics match.
-- If no suitable Stellar variable exists, add a clearly named variable at the narrowest shared owner (`stellarui.css` for reusable UI-system values, the app root for app-wide values, or the feature root for feature-only values), then consume that variable. Do not repeat the fallback literal at call sites.
-- Literal `0`, percentages, intrinsic keywords, and unitless multipliers are allowed. A one-pixel hairline must use the existing border-width variable rather than literal `1px` when one exists.
-- CSS query thresholds cannot currently use custom properties. Avoid width breakpoints through intrinsic flex/grid layout first. If a media/container query is truly necessary, scope it to the owning component and document why the structural mode change cannot be intrinsic.
-- Before reporting CSS work complete, audit every added declaration for literals and replace design literals with existing or newly defined variables.
+All project design values must use CSS custom properties.
 
-## Modern CSS
-
-Use modern CSS nesting by default for project-authored CSS. Flat repeated selectors are a smell unless the file is generated, vendored, or a tiny reset.
-
-```css
-.feature {
-  display: grid;
-  gap: var(--space-4);
-
-  & header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  & button[aria-pressed="true"] {
-    font-weight: 700;
-  }
-
-  @media (width >= 48rem) {
-    grid-template-columns: 1fr auto;
-  }
-}
-```
+- Do not add literal colors, spacing, sizes, radii, shadows, durations, layers, or layout measures with two or more uses.
+- Examine `stellar.css` and `stellarui.css` first.
+- Use the Stellar variable with the applicable meaning.
+- If none exists, define one variable at the narrowest shared owner.
+- Do not repeat fallback literals at use sites.
+- Literal `0`, percentages, intrinsic keywords, and unitless multipliers are permitted.
+- Use an existing border-width variable for a one-pixel line.
+- Use intrinsic grid or flex layouts before width breakpoints.
+- If a query is necessary, scope it to its component and document the cause.
 
 ## Structure
 
-- Project app CSS (for example `stardust.css`) must prefer semantic element selectors nested under layout roots (`header`, `main`, `aside`, `footer`, `nav`, `section`, `article`) before adding more classes.
-- Keep component/layout class names only for real ownership boundaries or custom elements; do not add class wrappers when semantic elements already identify the structure.
-- Scope styles by feature root class/ID to avoid global leakage.
-- Prefer low-specificity selectors; use `:where()` for grouping when helpful.
-- Use design tokens/custom properties (`--space-*`, `--color-*`) instead of magic values.
-- When a project uses Stellar CSS, copy/use its baseline stylesheet and derive app CSS from Stellar variables. Hard-coded design values are not permitted.
-- Keep layout resilient: grid/flex, `minmax()`, logical properties, fluid sizes.
-- For filter/action bars, prefer flex with `flex-wrap`, explicit `gap`, and tokenized spacing so controls wrap cleanly on narrow screens.
-- Avoid inline styles except examples, dynamic values, or tiny one-offs already common in the target codebase.
+- Use modern CSS nesting for project CSS.
+- Use semantic selectors nested in layout roots before new classes.
+- Add a class only for an ownership boundary or custom element.
+- Scope styles to the feature root.
+- Use low-specificity selectors and `:where()` when useful.
+- Use grid, flex, `minmax()`, logical properties, and fluid sizes.
+- Let action bars wrap with explicit tokenized gaps.
+- Use inline styles only for dynamic values or established small exceptions.
 
-## Code editor styling
+## Code editors
 
-For StellarUI/CodeMirror editors:
+- Keep `.cm-content` transparent when CodeMirror `drawSelection` is active.
+- A content background with a color hides the selection layer.
+- Use native `::selection` when selected text must invert colors.
+- Use `var(--code-editor-fg)` for the selection background.
+- Use `var(--code-editor-bg)` for the selection text.
+- Keep read-only editors focusable and selectable.
+- Correct selection behavior before you change the editor background.
 
-- CodeMirror `drawSelection` paints selection as a background layer behind `.cm-content`; any opaque `.cm-content` background hides it. Keep `.cm-content` transparent if using drawn selections.
-- If selected text must invert foreground/background, prefer native selection over CodeMirror `drawSelection`: use `::selection { background: var(--code-editor-fg); color: var(--code-editor-bg); }` and keep the editor focusable/selectable.
-- Do not chase selection contrast by changing the whole editor background. Fix the selection path first: content transparency, read-only focusability, then selection foreground/background.
+## Datastar states
 
-## Datastar interaction states
+- Toggle meaningful classes such as `loading` and `open` with `data-class:*`.
+- Use CSS for visibility and animation.
+- Make transitions safe for patched or reordered elements.
+- Use `data-ignore-morph` only for DOM that server rendering does not own.
 
-- Use `data-class:loading`, `data-class:open`, etc. to toggle meaningful classes.
-- Use CSS for visibility/animation; Datastar only flips state.
-- Respect morphing: transitions should tolerate elements being patched/reordered.
-- Use `data-ignore-morph` only for DOM that CSS/JS owns outside server rendering.
+## Do not use
 
-## Avoid
-
-- Div soup when semantic HTML fits.
-- Deep BEM/class hierarchies when scoped nested selectors are clearer.
-- Client JS for hover/focus/disclosure behavior CSS or Datastar attributes can express.
-- Hard-coded viewport-only layouts; support narrow screens by default.
+- Nonsemantic element groups when semantic HTML is applicable.
+- Deep class hierarchies when scoped nested selectors are clear.
+- Client JavaScript for CSS or Datastar behavior.
+- Viewport-only layouts that fail on narrow screens.
+- Hard-coded project design values.
 
 ## Verification
 
-Before finishing CSS changes:
-
-1. Scan touched CSS for unnecessary flat selectors and class-only structure; convert to nested semantic selectors where practical.
-2. Audit added CSS values. Reuse variables from `stellar.css` or `stellarui.css`; add a scoped variable only when no matching token exists. Leave no hard-coded design literals.
-3. Check generated markup remains semantic and accessible.
-4. For Go/templ projects, run `templ generate` plus normal tests/build.
+1. Examine changed CSS for flat selectors that are not necessary.
+2. Examine each added value and remove design literals.
+3. Use existing tokens before you add a scoped token.
+4. Make sure generated markup is semantic.
+5. Examine labels, names, keyboard use, and ARIA.
+6. For Go/templ projects, run `templ generate` and the usual tests or build.
