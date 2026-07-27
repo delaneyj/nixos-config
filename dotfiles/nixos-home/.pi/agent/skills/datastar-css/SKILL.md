@@ -12,7 +12,7 @@ CSS should support semantic HTML and coarse morphing. Keep styling declarative; 
 - Choose semantic elements before classes.
 - Preserve accessible names: labels for inputs, button text/aria-labels, fieldsets/legends where useful.
 - Style states with attributes/classes that Datastar toggles (`data-class:*`, `aria-*`, `hidden`) rather than custom JS.
-- Prefer project design-system controls for app UI forms/filters (for example StellarUI `stellar-text-field`, `stellar-select`, `stellar-button`) instead of raw inputs, while preserving native form submission/progressive enhancement semantics.
+- Hard ban `<form>` in Datastar app pages. Prefer project design-system controls for filters and command inputs (for example StellarUI `stellar-text-field`, `stellar-select`, `stellar-button`), bound to signals and explicit Datastar actions.
 
 ## Design tokens are mandatory
 

@@ -590,6 +590,13 @@ in
   fonts.packages = with pkgs; [
     fira-code
     fira-code-symbols
+    (google-fonts.override {
+      fonts = [
+        "Audiowide"
+        "Orbitron"
+        "Oxanium"
+      ];
+    })
   ];
 
   environment.variables = {

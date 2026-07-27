@@ -43,7 +43,8 @@ Any UI change that adds or edits CSS must apply `datastar-css` before editing an
   - `templ feature(u *auth.User, model *FeatureModel)` for page/demo wrapper.
   - `templ featureApp(model *FeatureModel)` for coarse morph target.
   - Small repeated components allowed when reused or clarity warrants it.
-- Prefer semantic HTML: `main`, `section`, `article`, `header`, `footer`, `nav`, `form`, `fieldset`, `label`, `button`, `table` as appropriate.
+- Hard ban `<form>` in Datastar app pages. Use signal-bound controls plus explicit `data-on:*` actions and Datastar requests.
+- Prefer semantic HTML: `main`, `section`, `article`, `header`, `footer`, `nav`, `fieldset`, `label`, `button`, `table` as appropriate.
 - Put stable IDs on coarse morph targets.
 - Put Datastar setup (`data-init`) on the coarse owner element (`body`, `main`, or app `<section>`), not random leaves.
 - Use `templ.JSONString`/typed structs for signal payloads. Avoid string-building JSON.
@@ -53,10 +54,8 @@ Any UI change that adds or edits CSS must apply `datastar-css` before editing an
 
 - Signals use camelCase internally; kebab-case attribute keys map to camelCase. When referencing a signal in an expression, use camelCase (`$queryLoading`), not kebab-case (`$query-loading`). This also applies to indicator signals from `data-indicator:query-loading`: the generated signal is `$queryLoading`.
 - Put `data-signals` before `data-init` when init depends on signal existence.
-- Use `data-bind` for form state; use `data-on:*` for event logic.
-- Event attributes must use the colon form: `data-on:input`, `data-on:click`,
-  `data-on:submit__prevent`. Do **not** write `data-on-input` or
-  `data-on-click`; Datastar will not register those as event handlers.
+- Use `data-bind` for control state and `data-on:*` for event logic. Trigger queries/commands directly from controls; never route interaction through form submission or `requestSubmit()`.
+- Event attributes must use the colon form: `data-on:input`, `data-on:click`. Do **not** write `data-on-input` or `data-on-click`; Datastar will not register those as event handlers.
 - Datastar handler values are expressions, not arbitrary JS statement blocks.
   Avoid statement syntax such as `if (...) ...` after a semicolon. Use an
   expression form instead, e.g.

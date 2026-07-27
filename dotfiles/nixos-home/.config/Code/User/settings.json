@@ -4,7 +4,7 @@
   "editor.fontLigatures": true,
   "editor.formatOnSave": true,
   "extensions.autoCheckUpdates": false,
-  "extensions.autoUpdate": false,
+  "extensions.autoUpdate": "off",
   "git.confirmSync": false,
   "explorer.confirmDelete": false,
   "git.path": "/run/current-system/sw/bin/git",
