@@ -26,6 +26,9 @@
   boot.loader.systemd-boot.configurationLimit = 5;
   boot.kernelModules = [ "kvm-amd" ];
   boot.kernelParams = [
+    # Avoid this model's intermittent hard hang in ACPI S3 (deep) suspend.
+    "mem_sleep_default=s2idle"
+
     # Keep the Cintiq Pro 24 USB hub/tablet path from dropping during enumeration.
     "usbcore.autosuspend=-1"
     "usbcore.quirks=056a:037f:k,056a:037c:k,056a:0351:k,056a:0355:k,056a:0331:k"
