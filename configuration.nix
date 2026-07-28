@@ -330,6 +330,7 @@ let
         cat > "$out/bin/code" <<'EOF'
     #!@BASH@
     set -euo pipefail
+    export PATH="@NIX_BIN@:$PATH"
     base_ext_dir="@BASE_EXT_DIR@"
     ext_dir="''${VSCODE_EXTENSIONS:-$HOME/.vscode/extensions}"
     mkdir -p "$ext_dir"
@@ -361,6 +362,7 @@ let
           --replace-fail @BASH@ ${pkgs.bash}/bin/bash \
           --replace-fail @BASE_EXT_DIR@ "$base_ext_dir" \
           --replace-fail @JQ@ ${pkgs.jq}/bin/jq \
+          --replace-fail @NIX_BIN@ ${config.nix.package}/bin \
           --replace-fail @VSCODE@ ${vscodePackageRaw}/bin/code
         chmod +x "$out/bin/code"
   '';
