@@ -13,6 +13,7 @@
     "gopls": "/run/current-system/sw/bin/gopls"
   },
   "templ.executablePath": "/run/current-system/sw/bin/templ",
+  "nixEnvSelector.useFlakes": true,
   "json.schemaDownload.trustedDomains": {
     "https://schemastore.azurewebsites.net/": true,
     "https://raw.githubusercontent.com/microsoft/vscode/": true,
