@@ -235,7 +235,7 @@ tea pr reject <number> --description "..."
 tea pr merge <number>
 
 # Comments and releases
-tea comment <issue-or-pr-number> --description "..."
+tea comment <issue-or-pr-number> "..."
 tea release list --output json
 tea release create --tag <tag> --title "..." --note "..."
 tea release edit <tag> --title "..."

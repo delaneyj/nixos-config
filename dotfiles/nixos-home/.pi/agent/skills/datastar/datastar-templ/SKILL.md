@@ -29,9 +29,8 @@ Use the applicable skills for UI work:
 5. `datastar-css`: semantic HTML and nested CSS.
 6. `datastar-debugging`: user-run runtime debugging.
 7. `go-style`: Go implementation.
-8. `test-driven-development`: behavior changes that are not Datastar debugging.
 
-Name these skills in UI plans.
+Name these skills in UI plans. Use project tests for behavior changes that are not Datastar debugging.
 
 ## CSS gate
 
