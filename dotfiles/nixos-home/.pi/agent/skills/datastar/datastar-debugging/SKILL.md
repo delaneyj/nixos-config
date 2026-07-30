@@ -69,6 +69,13 @@ console.log('[visual-check]', {
 - Examine the lifecycle hook before the handler body.
 - Current Rocket uses `onFirstRender`. Some older StellarUI bundles use `onFirstUpdate`.
 - For color mode faults, log `$colorMode`, `$systemDark`, the root class, and the system media query.
+- For `stellar-code-editor` faults, keep the initial host reference before the first action.
+- After each action, log reference changes, `.cm-editor` count, root class, foreground color, and background color.
+- Do the same action two times. A one-action result is not sufficient.
+- If the root class is stable but the host changed, investigate parent morphs before CSS.
+- Set `data-ignore-morph` on the editor in its first response when a parent can be patched.
+- Update value, language, diagnostics, and results through signals or properties.
+- Do not add local `--code-*` or `--code-editor-*` overrides until the editor host is stable.
 - Do not use only `stellar-button-color-mode.value` for system preference changes.
 
 ## Verification

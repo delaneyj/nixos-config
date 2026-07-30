@@ -76,19 +76,31 @@ Use `datastar-css` before each CSS change and during the last examination.
 - Use one camelCase indicator signal for controls in one request family.
 - Use `data-ignore-morph` only for necessary client-owned islands.
 
-## Stateful custom elements
+## `stellar-code-editor` hard gate
 
-Keep rich custom elements stable after mount. This includes `stellar-code-editor` and CodeMirror.
+Apply this gate before you add or change `stellar-code-editor` or a helper that renders it.
 
-- Do not replace an editor to change value, language, format, visibility, or results.
-- Update values, language, and diagnostics through signals or properties.
-- Use one editor for RON and JSON modes.
-- Do not toggle different editors with `data-show`.
-- Patch result signals before status or metadata HTML.
-- Patch the editor region only for initial creation or intentional removal.
-- If parent HTML must change, put the editor in a stable `data-ignore-morph` child.
-- Test mode switches in a browser.
-- Make sure color mode, theme, focus, scroll, and selection do not change.
+1. Find each SSE patch that can include a parent of the editor.
+2. If a parent can be patched, set `data-ignore-morph` on the editor in its first response.
+3. Use signals or properties for each value that can change.
+4. Keep one editor in the DOM for value, language, format, visibility, diagnostic, and result changes.
+5. Do not use `data-show` to alternate between editor instances.
+6. Patch result signals before you patch status or metadata HTML.
+
+These rules also apply to read-only editors and command snippets. An editor in initial page HTML is stateful after mount.
+
+Do not use local `--code-*` or `--code-editor-*` overrides to correct a morph fault. First, make the editor stable.
+
+For each action that can patch a parent of the editor, do these browser checks:
+
+1. Keep the initial editor host reference and its computed foreground and background colors.
+2. Do the action two times.
+3. Make sure that the host reference did not change.
+4. Make sure that the shadow root contains exactly one `.cm-editor`.
+5. Make sure that the root dark class and the initial colors did not change.
+6. Make sure that signals changed the editor value and other applicable properties.
+
+A server HTML test does not complete this gate. Test mode switches in a browser.
 
 For read-only CodeMirror controls:
 

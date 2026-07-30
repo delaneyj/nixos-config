@@ -43,6 +43,8 @@ All project design values must use CSS custom properties.
 
 ## Code editors
 
+Before you change code-editor colors, make sure that morphs do not replace the editor host.
+
 - Keep `.cm-content` transparent when CodeMirror `drawSelection` is active.
 - A content background with a color hides the selection layer.
 - Use native `::selection` when selected text must invert colors.
@@ -50,6 +52,8 @@ All project design values must use CSS custom properties.
 - Use `var(--code-editor-bg)` for the selection text.
 - Keep read-only editors focusable and selectable.
 - Correct selection behavior before you change the editor background.
+- Do not use local theme variables to hide a repeated-initialization fault.
+- If an action changes editor colors, compare the host reference and root dark class before you edit CSS.
 
 ## Datastar states
 

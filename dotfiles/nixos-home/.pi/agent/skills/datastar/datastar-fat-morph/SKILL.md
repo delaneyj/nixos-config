@@ -35,7 +35,19 @@ Patch the largest stable semantic owner that gives correct state:
 
 Keep rich custom elements stable. Examples include CodeMirror, canvas, charts, media players, and `stellar-code-editor`.
 
-Update their values, languages, diagnostics, and results through signals or properties. Patch only status or metadata that is not in the element.
+Before each `stellar-code-editor` change, find all patch targets that can contain the editor. Do not limit this check to the direct parent.
+
+If a patch target can contain the editor, apply these rules:
+
+- Set `data-ignore-morph` on the editor in its first response.
+- Update each value, language, diagnostic, and result through a signal or property.
+- Keep the editor host in the DOM while those values change.
+- Do not patch the editor to change a read-only command snippet.
+- Do not add CSS theme overrides as a correction for repeated editor initialization.
+
+An editor that appears after the first command is stateful. The same rule applies to an editor in the initial page HTML.
+
+Repeat each applicable action two times in a browser. Make sure that the host reference stays equal and the shadow root has one `.cm-editor`.
 
 ## Selectors
 
