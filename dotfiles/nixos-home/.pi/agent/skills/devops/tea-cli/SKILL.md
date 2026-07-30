@@ -1,6 +1,6 @@
 ---
 name: tea-cli
-description: Defines use of the Gitea and Forgejo tea CLI. Use for issues, pull requests, releases, repositories, notifications, and authenticated API calls.
+description: Defines Gitea and Forgejo tea CLI use. Use for issues, pull requests, releases, repositories, notifications, and authenticated API calls.
 ---
 
 # Tea CLI
@@ -9,7 +9,7 @@ Use `tea` for Gitea and Forgejo operations.
 
 ## Setup
 
-Use `tea` from `PATH`. In a Nix project, use the development shell when necessary:
+Use `tea` from `PATH`. Use the development shell in a Nix project when necessary:
 
 ```bash
 nix develop --command tea --version
@@ -38,7 +38,7 @@ Before `git commit`, use `no-unauthorized-commits`. A tea workflow does not auth
 
 Before PR creation, examine status, branch, remotes, commits, and publication state.
 
-Use noninteractive flags. Stop for user input when required data is unclear.
+Use noninteractive flags. Stop for user input if necessary data is not clear.
 
 ## Issue branch gate
 
@@ -74,7 +74,7 @@ git branch --show-current
 tea repo --output json
 ```
 
-If repository detection is ambiguous, use one selector:
+If repository detection is not clear, use one selector:
 
 ```bash
 tea <cmd> --repo owner/repo
@@ -108,7 +108,7 @@ Quote API endpoints that contain `?` or `&`.
 3. Read the issue and comments as JSON.
 4. Make a short branch label from the issue title.
 5. Use lowercase words separated by hyphens.
-6. Use two to five useful words and include the issue number.
+6. Use two to five words that identify the issue. Include the issue number.
 7. Use `<number>-<short-label>` by default.
 8. Find local and remote branches before branch creation.
 
@@ -124,7 +124,7 @@ git switch <branch>
 git switch --track origin/<branch>
 ```
 
-If none exists, update the target base and create the branch:
+If no branch exists, update the target base and create the branch:
 
 ```bash
 git switch main
@@ -132,7 +132,7 @@ git pull --ff-only
 git switch -c <number>-<short-label>
 ```
 
-Use authenticated development-shell git commands when required.
+Use authenticated development-shell git commands when necessary.
 
 After the switch, make sure the branch starts with the open issue number.
 
@@ -165,12 +165,12 @@ PR text rules:
 
 - Use a short title that describes the result.
 - Put `Why:` before `What changed:`.
-- In `Why:`, give the cause, user effect, and reason for the correction.
+- In `Why:`, give the cause, user effect, and correction reason.
 - In `What changed:`, give commit themes and the result.
 - Do not include process logs, large test output, or speculative work.
 - Add `Closes #<number>` when applicable.
 - Assign the issue creator as reviewer.
-- Read the issue `user` field to get that reviewer.
+- Read the issue `user` field to identify that reviewer.
 - Pass newline characters. Do not pass literal `\n` text.
 
 Use a temporary file for a multiline body:
@@ -193,7 +193,7 @@ tea pr create --base main --head <branch> --title "..." --description "$(cat "$t
 tea pr edit <pr-number> --add-reviewers <issue-creator>
 ```
 
-Reviewer assignment can fail when the issue creator is the PR author. Report that result.
+Reviewer assignment can fail if the issue creator is the PR author. Report that result.
 
 ## Post-merge cleanup
 
@@ -202,7 +202,7 @@ When the user says a PR was merged:
 1. Run `tea pr <number> --output json`.
 2. Require `hasMerged: true`.
 3. Save the current branch name.
-4. Switch to the PR base when currently on the PR branch.
+4. Switch to the PR base when you are on the PR branch.
 5. Fetch, prune, and fast-forward the base through the authenticated shell.
 6. Delete the local PR branch with `git branch -d <branch>`.
 7. Report the current branch and tree status.

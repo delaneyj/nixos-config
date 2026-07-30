@@ -5,7 +5,7 @@ description: Defines coarse Datastar morphing. Use for patch boundaries, reconne
 
 # Datastar Fat Morph
 
-Send complete current state for one meaningful region. Let Datastar calculate the DOM changes.
+Send all current state data for one meaningful region. Let Datastar calculate DOM changes.
 
 ## Patch boundary
 
@@ -14,7 +14,7 @@ Patch the largest stable semantic owner that gives correct state:
 - Use `body` for app shell or page state.
 - Use `main` for most page content.
 - Use a feature root for feature state.
-- Use a child only when it has its own owner, slow loading, or high update frequency.
+- Use a child only when it has its own owner, slow loading, or frequent updates.
 
 ## Reasons
 
@@ -43,11 +43,11 @@ If a patch target can contain the editor, apply these rules:
 - Update each value, language, diagnostic, and result through a signal or property.
 - Keep the editor host in the DOM while those values change.
 - Do not patch the editor to change a read-only command snippet.
-- Do not add CSS theme overrides as a correction for repeated editor initialization.
+- Do not add CSS theme overrides to correct an editor that initializes again.
 
-An editor that appears after the first command is stateful. The same rule applies to an editor in the initial page HTML.
+An editor that appears after the first command is stateful. Apply this rule to an editor in the initial page HTML.
 
-Repeat each applicable action two times in a browser. Make sure that the host reference stays equal and the shadow root has one `.cm-editor`.
+Repeat each applicable action two times in a browser. Make sure the host reference remains equal. Make sure the shadow root has one `.cm-editor`.
 
 ## Selectors
 
@@ -57,7 +57,7 @@ Let patch content identify its target by root ID:
 sse.PatchElementTempl(featureApp(model))
 ```
 
-Use `WithSelector` only when content omits the target element. It is also applicable to special targets such as `title`.
+Use `WithSelector` only when content omits the target element. Use it for special targets such as `title`.
 
 ## Do not use
 
@@ -70,7 +70,7 @@ Use `WithSelector` only when content omits the target element. It is also applic
 ## Exceptions
 
 - Infinite scroll can append items.
-- Streams can append each complete part.
+- Streams can append each full part.
 - Dashboards can patch cards with different owners at the same time.
 - Serialize all SSE writes through one writer goroutine or channel.
 - Third-party widgets can use narrow patches and stable client-owned DOM.

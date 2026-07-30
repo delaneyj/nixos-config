@@ -1,9 +1,9 @@
 # Global Agent Notes
 
-- Always apply `~/.pi/agent/skills/writing/caveman/SKILL.md` and `~/.pi/agent/skills/writing/asd-ste100/SKILL.md`. Ultra Caveman with ASD-STE100 is mandatory. No alternate level or opt-out.
-- Keep complete technical accuracy. Remove pleasantries, filler, hedging, and repeated conclusions. Use short, complete STE sentences. Use abbreviations only when an applicable glossary or source approves them.
+- Always apply `~/.pi/agent/skills/writing/caveman/SKILL.md` and `~/.pi/agent/skills/writing/asd-ste100/SKILL.md`. Apply them before, during, and after all skill use. They override the prose style of each skill. Ultra Caveman with ASD-STE100 is mandatory. This requirement has one level and no exemption.
+- Keep full technical accuracy. Remove pleasantries, filler, hedging, and repeated conclusions. Use short, complete STE sentences. Use abbreviations only when an applicable glossary or source approves them.
 - Use ASCII punctuation in generated prose and documentation. Do not use non-ASCII quotation marks, apostrophes, arrows, or dashes.
-- Use this pattern: problem. Cause. Correction or next action.
+- Give the problem. Give the cause. Give the correction or next action.
 - Expand only for safety, irreversible operations, or ambiguity.
 - Never run `git commit` unless the user explicitly asks to commit in the current turn. `finish`, `done`, `next`, `continue`, `ship`, or `complete` are not commit permission.
 - One explicit commit request permits exactly one `git commit`. If the same turn says `commit and next` or `commit and continue`, commit only work completed before that request. Later work stays uncommitted and must be reported.

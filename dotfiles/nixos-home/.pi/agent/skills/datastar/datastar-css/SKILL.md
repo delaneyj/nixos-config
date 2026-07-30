@@ -1,11 +1,11 @@
 ---
 name: datastar-css
-description: Defines CSS style for Datastar/templ UIs. Use for CSS in Datastar server-rendered interfaces.
+description: Defines CSS style for Datastar and templ UIs. Use for CSS in Datastar server-rendered interfaces.
 ---
 
 # Datastar CSS
 
-Use semantic HTML, CSS state, and coarse morphing. Do not use JavaScript when CSS can do the work.
+Use semantic HTML, CSS state, and coarse morphing. Do not use JavaScript when CSS can perform the task.
 
 ## HTML
 
@@ -18,17 +18,17 @@ Use semantic HTML, CSS state, and coarse morphing. Do not use JavaScript when CS
 
 ## Design tokens
 
-All project design values must use CSS custom properties.
+Use CSS custom properties for all project design values.
 
 - Do not add literal colors, spacing, sizes, radii, shadows, durations, layers, or layout measures with two or more uses.
 - Examine `stellar.css` and `stellarui.css` first.
 - Use the Stellar variable with the applicable meaning.
-- If none exists, define one variable at the narrowest shared owner.
+- If none exists, define one variable at the smallest shared owner.
 - Do not repeat fallback literals at use sites.
 - Literal `0`, percentages, intrinsic keywords, and unitless multipliers are permitted.
 - Use an existing border-width variable for a one-pixel line.
 - Use intrinsic grid or flex layouts before width breakpoints.
-- If a query is necessary, scope it to its component and document the cause.
+- Scope a necessary query to its component and document the cause.
 
 ## Structure
 
@@ -36,14 +36,14 @@ All project design values must use CSS custom properties.
 - Use semantic selectors nested in layout roots before new classes.
 - Add a class only for an ownership boundary or custom element.
 - Scope styles to the feature root.
-- Use low-specificity selectors and `:where()` when useful.
+- Use low-specificity selectors and `:where()` when necessary.
 - Use grid, flex, `minmax()`, logical properties, and fluid sizes.
 - Let action bars wrap with explicit tokenized gaps.
 - Use inline styles only for dynamic values or established small exceptions.
 
 ## Code editors
 
-Before you change code-editor colors, make sure that morphs do not replace the editor host.
+Before you change code-editor colors, make sure morphs do not replace the editor host.
 
 - Keep `.cm-content` transparent when CodeMirror `drawSelection` is active.
 - A content background with a color hides the selection layer.
@@ -53,7 +53,7 @@ Before you change code-editor colors, make sure that morphs do not replace the e
 - Keep read-only editors focusable and selectable.
 - Correct selection behavior before you change the editor background.
 - Do not use local theme variables to hide a repeated-initialization fault.
-- If an action changes editor colors, compare the host reference and root dark class before you edit CSS.
+- If an action changes editor colors, compare the host reference and root dark class before you change CSS.
 
 ## Datastar states
 
@@ -77,4 +77,4 @@ Before you change code-editor colors, make sure that morphs do not replace the e
 3. Use existing tokens before you add a scoped token.
 4. Make sure generated markup is semantic.
 5. Examine labels, names, keyboard use, and ARIA.
-6. For Go/templ projects, run `templ generate` and the usual tests or build.
+6. For Go and templ projects, run `templ generate` and the usual tests or build.

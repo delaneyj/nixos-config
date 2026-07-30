@@ -1,8 +1,8 @@
 # Sources and licenses
 
-This skill contains unofficial machine-readable material derived from ASD-STE100 Issue 9. ASD owns ASD-STE100. The upstream projects state that they are not affiliated with or endorsed by ASD.
+This skill contains unofficial machine-readable material derived from ASD-STE100 Issue 9. ASD owns ASD-STE100. The upstream projects state no ASD affiliation or endorsement.
 
-Use this material as a writing and review aid. It does not establish certification or complete compliance.
+Use this material for writing and review. It does not establish certification or full compliance.
 
 ## Rules
 
@@ -12,7 +12,7 @@ Use this material as a writing and review aid. It does not establish certificati
 - Source path: `src/biz/dfch/asdste100lookup/data/asdste100_issue9_rules.jsonl`
 - Local path: `data/rules.json`
 - SHA-256: `d5765b1e39f4df3e87ff8f73a5ea017a621a3ba1e48ee11562543090b0e1ec8b`
-- Records: 67 total; 53 rules, 9 recommendations, and 5 information entries
+- Records: 67 total. 53 rules, 9 recommendations, and 5 information entries.
 - Upstream project license: GPL-3.0-or-later
 - License copy: `licenses/asd-ste100-lookup-GPL-3.0-or-later.txt`
 
@@ -26,7 +26,7 @@ The source includes an `Rnnn.0` placeholder record. It is not a usable STE rule.
 - Source path: `src/biz/dfch/asdste100vocab/data/asdste100_issue9_base.jsonl`
 - Local path: `data/core-vocabulary.jsonl`
 - SHA-256: `07341ac9d07d87fd70bc77b181a56ddbb1941f798f12fb884ace0e178827c9ea`
-- Records: 2,200 total; 881 approved and 1,319 rejected
+- Records: 2,200 total. 881 approved and 1,319 rejected.
 - Upstream project license: AGPL-3.0-or-later
 - License copy: `licenses/asd-ste100-vocab-AGPL-3.0-or-later.txt`
 
@@ -42,4 +42,4 @@ The source includes an `Rnnn.0` placeholder record. It is not a usable STE rule.
 - Upstream project license: AGPL-3.0-or-later
 - License copy: `licenses/asd-ste100-vocab-AGPL-3.0-or-later.txt`
 
-Technical-word records are examples associated with the technical noun and technical verb categories. Organization or subject-field approval is still required where the standard requires it.
+Technical-word records are examples for technical noun and technical verb categories. Get organization or subject-field approval when the standard tells you to get this approval.

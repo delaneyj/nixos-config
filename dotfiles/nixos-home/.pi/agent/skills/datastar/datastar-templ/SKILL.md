@@ -1,6 +1,6 @@
 ---
 name: datastar-templ
-description: Defines Datastar-first Go/templ development. Use for web UIs, routes, templ components, server-rendered interactions, Datastar attributes, and SSE.
+description: Defines Datastar-first Go and templ development. Use for web UIs, routes, templ components, server-rendered interactions, Datastar attributes, and SSE.
 ---
 
 # Datastar and templ
@@ -11,10 +11,10 @@ Use server-rendered templ HTML, Datastar attributes, and SSE. Do not create SPA 
 
 Examine these official `~/repos/datastar-dev` files before nontrivial work:
 
-- `site/reference/attributes.templ`: names, capitalization, and modifiers.
-- `site/reference/sse_events.templ`: SSE event behavior.
-- `site/reference/sdks.templ`: SDK helpers.
-- `site/examples/*.templ` and `*.go`: component and interaction patterns.
+- `site/reference/attributes.templ`: Contains names, capitalization, and modifiers.
+- `site/reference/sse_events.templ`: Contains SSE event behavior.
+- `site/reference/sdks.templ`: Contains SDK helpers.
+- `site/examples/*.templ` and `*.go`: Show component and interaction patterns.
 
 Use `datastar-bootstrap` for layouts, route trees, shared files, assets, and hot reload.
 
@@ -22,13 +22,13 @@ Use `datastar-bootstrap` for layouts, route trees, shared files, assets, and hot
 
 Use the applicable skills for UI work:
 
-1. `datastar-bootstrap`: app and route setup.
-2. `datastar-templ`: templ and Datastar interactions.
-3. `datastar-cqrs`: commands, streams, and event bus.
-4. `datastar-fat-morph`: patch boundaries.
-5. `datastar-css`: semantic HTML and nested CSS.
-6. `datastar-debugging`: user-run runtime debugging.
-7. `go-style`: Go implementation.
+1. Use `datastar-bootstrap` for app and route setup.
+2. Use `datastar-templ` for templ and Datastar interactions.
+3. Use `datastar-cqrs` for commands, streams, and the event bus.
+4. Use `datastar-fat-morph` for patch boundaries.
+5. Use `datastar-css` for semantic HTML and nested CSS.
+6. Use `datastar-debugging` for user-run runtime debugging.
+7. Use `go-style` for Go implementation.
 
 Name these skills in UI plans. Use project tests for behavior changes that are not Datastar debugging.
 
@@ -68,7 +68,7 @@ Use `datastar-css` before each CSS change and during the last examination.
 - Move longer logic to a named browser function or the server.
 - Copy upstream custom-element binding patterns before you add workarounds.
 - Keep inline expressions short.
-- Use indicators only when they give useful feedback.
+- Use indicators only when their feedback helps the user.
 - Put the same `data-indicator:*` key on each element that starts the request.
 - An ancestor indicator does not reliably track requests from child elements.
 - Create an init indicator signal before its fetch starts.
@@ -86,18 +86,18 @@ Apply this gate before you add or change `stellar-code-editor` or a helper that 
 5. Do not use `data-show` to alternate between editor instances.
 6. Patch result signals before you patch status or metadata HTML.
 
-These rules also apply to read-only editors and command snippets. An editor in initial page HTML is stateful after mount.
+Apply these rules to read-only editors and command snippets. An editor in initial page HTML is stateful after mount.
 
-Do not use local `--code-*` or `--code-editor-*` overrides to correct a morph fault. First, make the editor stable.
+Do not use local `--code-*` or `--code-editor-*` overrides to correct a morph fault. Make the editor stable first.
 
 For each action that can patch a parent of the editor, do these browser checks:
 
 1. Keep the initial editor host reference and its computed foreground and background colors.
 2. Do the action two times.
-3. Make sure that the host reference did not change.
-4. Make sure that the shadow root contains exactly one `.cm-editor`.
-5. Make sure that the root dark class and the initial colors did not change.
-6. Make sure that signals changed the editor value and other applicable properties.
+3. Make sure the host reference did not change.
+4. Make sure the shadow root contains one `.cm-editor`.
+5. Make sure the root dark class and initial colors did not change.
+6. Make sure signals changed the editor value and other applicable properties.
 
 A server HTML test does not complete this gate. Test mode switches in a browser.
 
@@ -157,7 +157,7 @@ Use a fast skeleton when cards have different latency.
 4. Load each model in a goroutine.
 5. Send components through a channel to one SSE writer.
 6. Do not write SSE from worker goroutines at the same time.
-7. Patch a complete card or section with its target ID.
+7. Patch the full card or section with its target ID.
 8. Patch a local error component when one card fails.
 
 Render the full page synchronously when all data is inexpensive.
@@ -166,12 +166,12 @@ Render the full page synchronously when all data is inexpensive.
 
 Use inline step panels for complex write flows:
 
-- One primary action in each step.
+- Use one primary action in each step.
 - Show progress.
-- Server-confirmed validation before save.
-- Inline errors and contextual help.
-- A success panel with useful next actions.
-- No modal unless inline review cannot show destructive risk clearly.
+- Use server-confirmed validation before save.
+- Show inline errors and contextual help.
+- Show a success panel with applicable subsequent actions.
+- Do not use a modal unless inline review cannot clearly show destructive risk.
 
 ## Defaults
 
@@ -183,7 +183,7 @@ Use inline step panels for complex write flows:
 
 ## Verification
 
-For Go/templ work that is not runtime debugging, use the project task runner. Typical commands:
+For Go and templ work that is not runtime debugging, use the project task runner. Typical commands:
 
 ```bash
 templ generate

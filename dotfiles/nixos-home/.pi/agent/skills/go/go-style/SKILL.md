@@ -1,6 +1,6 @@
 ---
 name: go-style
-description: Defines Go code style. Use for domain types, encoding, serialization, composite literals, helpers, variables, control flow, and file organization.
+description: Defines Go code style for domain types, encoding, serialization, composite literals, helpers, variables, control flow, and file organization.
 ---
 
 # Go Style
@@ -10,9 +10,9 @@ Use these rules for all Go changes.
 ## Files
 
 - Use one file for each concrete type, domain concept, or wire kind.
-- Examples: `matrix2.go`, `matrix3.go`, and `matrix4.go`.
-- Keep type-specific encoding and serialization with its type.
-- Keep central files only for shared dispatch, interfaces, and reused low-level helpers.
+- Use names such as `matrix2.go`, `matrix3.go`, and `matrix4.go`.
+- Keep type-specific encoding and serialization with the type.
+- Use central files only for shared dispatch, interfaces, and reused low-level helpers.
 
 ## Names
 
@@ -21,19 +21,19 @@ Use standard Go initialisms only. Do not use all-capital domain acronyms. Use `O
 ## Domain types
 
 - Put applicable interface methods directly on owned concrete types.
-- Do not add an adapter when the owned type can have the method.
+- Do not add an adapter when an owned type can have the method.
 - Use wrappers only for primitives, external types, interface boundaries, or necessary public API behavior.
 
 ## Serialization
 
 - Let each type own its serialization methods.
-- Do not use a central type switch for behavior that belongs to a type.
+- Do not use a central type switch for behavior that belongs to one type.
 - Use shared helpers only for mechanics with more than one use.
 - Do not use JSON between a Go value and RON.
 - Use `ron.Marshal`, `ron.MarshalCompact`, `ron.MarshalInto`, or `ron.NewEncoder` directly.
 - Do not send `json.Marshal` output to `ron.FromJSON` or `ron.FromJSONCompact`.
 - Use `ron.FromJSON` only for bytes that originate as JSON.
-- Before completion, find and remove avoidable JSON-to-RON chains.
+- Before you finish, find and remove avoidable JSON-to-RON chains.
 
 ## Variadic parameters
 
@@ -57,7 +57,7 @@ appendRawFloat64s(dst, v[:]...)
 
 ## Composite literals
 
-Use multiline keyed literals by default. This includes variables, returns, configurations, constructors, and decoded values.
+Use multiline keyed literals by default. Include variables, returns, configurations, constructors, and decoded values.
 
 ```go
 var Line3Meta = Meta{
@@ -68,7 +68,7 @@ var Line3Meta = Meta{
 }
 ```
 
-Use a single line only for a very small local test fixture when it is clearer.
+Use one line only for a very small local test fixture when it gives a clear test.
 
 Use multiline nested literals:
 
@@ -101,7 +101,7 @@ return appendRawFloat64s(
 
 ## Variables
 
-Group related zero-value variables that have the same scope:
+Group related zero-value variables with the same scope:
 
 ```go
 var (
@@ -115,14 +115,14 @@ Use `:=` with explicit conversion for nonzero sentinel values.
 
 ## Package-level declarations
 
-Do not add a single-use package-level function, variable, constant, or type.
+Do not add a package-level function, variable, constant, or type with one production use.
 
 - Tests do not count as production uses.
 - Export does not justify one production use.
 - Inline one-off logic or use a local closure.
-- Exceptions: required interfaces, API boundaries, routes, recursion, generic reuse, or two production call sites.
+- Use exceptions only for necessary interfaces, API boundaries, routes, recursion, generic reuse, or two production call sites.
 
-Before completion:
+Before you finish:
 
 1. Examine each new package-level declaration in `git diff`.
 2. Find each production use.
@@ -131,7 +131,7 @@ Before completion:
 
 ## Ignored returns
 
-Call a function directly when all returned values can be safely discarded.
+Call a function directly when you can safely discard all returned values.
 
 ```go
 hash.Write([]byte("sqlite\x00"))
@@ -149,13 +149,13 @@ Use explicit ignored assignments only for error-producing APIs or interface and 
 
 After an important Go change, run gopls, usual Go validation, and a binary build.
 
-Use project-local gopls when available:
+Use project-local gopls when it is available:
 
 ```bash
 go tool gopls check ./path/to/changed.go
 ```
 
-If not, use `gopls check`. In Nix projects, add `gopls` to the development shell when necessary.
+If no project-local gopls is available, use `gopls check`. In Nix projects, add `gopls` to the development shell when necessary.
 
 ```bash
 nix develop --command gopls check ./path/to/changed.go
@@ -167,7 +167,7 @@ Do not use `gopls check ./...`. Give gopls explicit non-generated Go file paths.
 nix develop --command gopls check $(find cmd internal web -name '*.go' -not -name '*_templ.go' -print)
 ```
 
-If the project has test and build tasks, use them. If not, run:
+If no project test and build tasks are available, run:
 
 ```bash
 go test ./...

@@ -20,8 +20,8 @@ Rules:
 
 - Select one canonical term for each concept.
 - Keep each definition to one or two sentences.
-- Define what the concept is.
+- Define the concept.
 - Include only project-specific domain concepts.
 - Group terms when clear groups exist.
 
-Use one root `CONTEXT.md` for a single context. For multiple contexts, use a root `CONTEXT-MAP.md` that links each context file and states relationships between contexts.
+Use one root `CONTEXT.md` for one context. For multiple contexts, use a root `CONTEXT-MAP.md` that links context files and states their relationships.

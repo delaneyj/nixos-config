@@ -1,6 +1,6 @@
 # GitHub tracker operations
 
-Use `gh` inside the repository. Resolve the repository once:
+Use `gh` inside the repository. Resolve the repository one time:
 
 ```bash
 repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
@@ -8,7 +8,7 @@ repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 
 ## Labels
 
-Create or update the required labels before the first map:
+Create or update necessary labels before the first map:
 
 ```bash
 gh label create 'wayfinder:map' --color 5319E7 --description 'Wayfinder decision map' --force
@@ -55,9 +55,9 @@ gh issue view "$map_number" --comments --json number,title,body,state,url
 gh api "repos/$repo/issues/$map_number/sub_issues?per_page=100"
 ```
 
-For each open child, read assignees and `issue_dependencies_summary.blocked_by`. The frontier contains open children with no assignee and no open blocker.
+For each open child, read assignees and `issue_dependencies_summary.blocked_by`. The frontier contains open children that have no assignee and no open blocker.
 
-Claim before work:
+Claim tickets before work:
 
 ```bash
 gh issue edit "$ticket_number" --add-assignee '@me'

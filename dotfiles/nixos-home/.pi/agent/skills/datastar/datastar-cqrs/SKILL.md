@@ -19,7 +19,7 @@ Commands change state. Queries and streams render current state.
 8. Patch the current read model from the update stream.
 9. Store per-user or per-tab UI state in a server-readable cookie when it must continue between requests.
 
-Do not keep canonical state in `localStorage` or client signals.
+Do not store canonical state in `localStorage` or client signals.
 
 ## Commands
 

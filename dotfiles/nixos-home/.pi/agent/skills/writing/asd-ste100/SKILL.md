@@ -20,7 +20,7 @@ Use targeted queries. Read only the necessary bundled rules and vocabulary.
 
 ## Query data
 
-Set `skill_dir` to this skill directory. Then use:
+Set `skill_dir` to this skill directory. Run these commands:
 
 ```bash
 python3 "$skill_dir/scripts/lookup.py" rule 'R5.1' --field id --exact
@@ -29,30 +29,30 @@ python3 "$skill_dir/scripts/lookup.py" word 'acceptable' --source core --field n
 python3 "$skill_dir/scripts/lookup.py" word 'access ladder' --source technical --field name --exact
 ```
 
-The script gives JSON with records, result count, and truncation data.
+The script provides JSON records, a result count, and truncation data.
 
-Queries are case-insensitive regular expressions unless you use `--exact`. Use `--limit N` for more than 20 results.
+Queries use case-insensitive regular expressions unless you use `--exact`. Use `--limit N` when you need more than 20 results.
 
 - Rule fields: `id`, `ref`, `section`, `category`, `name`, `summary`, `content`, `all`.
 - Word fields: `name`, `status`, `type`, `category`, `meaning`, `alternative`, `example`, `note`, `all`.
 - Word sources: `core`, `technical`, `all`.
 
-For a word decision, first use `--exact` with `name`. One spelling can have records for different parts of speech.
+For each word decision, first use `--exact` with `name`. A spelling can have records for different parts of speech.
 
-Examine all records found. Examine meanings, forms, alternatives, examples, and notes. Use broad queries only to find entries.
+Examine all records that the query finds. Examine meanings, forms, alternatives, examples, and notes. Use broad queries only to find entries.
 
 ## Workflow
 
 1. Select procedural, descriptive, or safety-related rules for the text.
-2. Find important, unusual, ambiguous, or changed words and technical terms.
+2. Find important, unusual, ambiguous, changed words and technical terms.
 3. Use `--exact` with `name` for each selected word.
-4. Make sure that each word has the permitted meaning, spelling, part of speech, and form.
+4. Check each word for a permitted meaning, spelling, part of speech, and form.
 5. Use an unknown word only as a technical noun or technical verb with glossary approval.
-6. Do not use the bundled technical examples as universal approval.
-7. Use the rules for the selected writing type.
+6. Do not use bundled technical examples as universal approval.
+7. Use rules for the selected writing type.
 8. Read the full source record before you give a rule ID.
 9. Use one term for one concept. Do not use synonyms only for style.
-10. Examine the text after changes. Give the rule ID, location, cause, and replacement for each finding.
+10. Examine the changed text. Give the applicable rule ID, location, cause, and replacement for each finding.
 
 ## Minimum checks
 
@@ -75,8 +75,8 @@ Do not use a generic tokenizer for cases in R8.4-R8.7. Use the applicable word-c
 ```markdown
 ## Findings
 
-- `location` - R5.1: 24-word procedural sentence; maximum 20. Replacement: "..."
-- `location` - R1.2: `test` is a verb here; only the noun is approved. Replacement: "Do the test..."
+- `location` - R5.1: The procedural sentence has 24 words. The maximum is 20 words. Replacement: "..."
+- `location` - R1.2: `test` is a verb here. Only the noun is approved. Replacement: "Do the test..."
 
 ## Notes
 
@@ -84,12 +84,12 @@ Do not use a generic tokenizer for cases in R8.4-R8.7. Use the applicable word-c
 - Organization glossary decision required: ...
 ```
 
-If there are no findings, give the checked rule groups and the vocabulary in queries.
+If there are no findings, give the checked rule groups and vocabulary from the queries.
 
 Give excluded content and each necessary glossary decision.
 
 ## Data notes
 
-- `references/data/rules.json` is a JSON array despite its upstream `.jsonl` name.
+- The upstream file has a `.jsonl` name. `references/data/rules.json` is a JSON array.
 - Ignore the upstream `Rnnn.0` placeholder.
 - `references/SOURCES.md` contains provenance, pinned commits, hashes, and licenses.

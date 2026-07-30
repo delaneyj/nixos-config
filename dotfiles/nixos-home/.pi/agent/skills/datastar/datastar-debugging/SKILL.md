@@ -22,8 +22,8 @@ Use this workflow for Datastar, Rocket, StellarUI, browser bindings, and visual 
 2. Add focused `console.log` or `console.warn` calls near the suspected path.
 3. Give the user one specified interaction and the necessary log names.
 4. Use the returned logs as source data.
-5. Add more logs or make one small correction.
-6. After the behavior works, log computed styles for the applicable elements.
+5. Add logs or make one small correction.
+6. After the behavior works, log computed styles for applicable elements.
 7. Remove logs only after explicit user confirmation.
 
 ## Logs
@@ -67,11 +67,11 @@ console.log('[visual-check]', {
 
 - `Undefined Rocket action: onClick` usually means the action has no registration.
 - Examine the lifecycle hook before the handler body.
-- Current Rocket uses `onFirstRender`. Some older StellarUI bundles use `onFirstUpdate`.
+- Current Rocket uses `onFirstRender`. Some previous StellarUI bundles use `onFirstUpdate`.
 - For color mode faults, log `$colorMode`, `$systemDark`, the root class, and the system media query.
 - For `stellar-code-editor` faults, keep the initial host reference before the first action.
 - After each action, log reference changes, `.cm-editor` count, root class, foreground color, and background color.
-- Do the same action two times. A one-action result is not sufficient.
+- Do the same action two times. One action is not sufficient.
 - If the root class is stable but the host changed, investigate parent morphs before CSS.
 - Set `data-ignore-morph` on the editor in its first response when a parent can be patched.
 - Update value, language, diagnostics, and results through signals or properties.
@@ -80,6 +80,6 @@ console.log('[visual-check]', {
 
 ## Verification
 
-Verification depends on user hot reload, interaction, logs, and browser confirmation.
+Use user hot reload, interaction, logs, and browser confirmation for verification.
 
 Do not replace this workflow with agent-run tests or builds.

@@ -1,6 +1,6 @@
 ---
 name: datastar-bootstrap
-description: Creates and organizes Datastar/templ Go sites. Use for new apps, layouts, routes, shared files, assets, hot reload, and feature folders.
+description: Creates and organizes Datastar and templ Go sites. Use for apps, layouts, routes, shared files, assets, hot reload, and feature folders.
 ---
 
 # Datastar Bootstrap
@@ -11,12 +11,12 @@ Use Datastar as the default web stack.
 
 Examine these official `~/repos/datastar-dev` files before setup:
 
-- `site/shared/shared.templ`: base layout, scripts, inspector, and hot reload.
-- `site/shared/shared.go`: `RenderPage` and shared helpers.
-- `site/web/web.go`: routes, static files, and `/hotreload`.
-- `site/examples/examples.templ`: route registration and page wrappers.
-- `site/examples/*.templ` and `*.go`: feature patterns.
-- `site/shared/eventbus.go`: typed event bus.
+- `site/shared/shared.templ`: Contains the base layout, scripts, inspector, and hot reload.
+- `site/shared/shared.go`: Contains `RenderPage` and shared helpers.
+- `site/web/web.go`: Contains routes, static files, and `/hotreload`.
+- `site/examples/examples.templ`: Contains route registration and page wrappers.
+- `site/examples/*.templ` and `*.go`: Show feature patterns.
+- `site/shared/eventbus.go`: Contains the typed event bus.
 
 Use repository names and style.
 
@@ -25,10 +25,10 @@ Use repository names and style.
 Create one shared base component in `shared.templ`:
 
 - Add `<!DOCTYPE html>` and `<html lang="en">`.
-- Add title, description, charset, viewport, and canonical URL when applicable.
+- Add a title, description, charset, viewport, and canonical URL when applicable.
 - Put CSS links before the Datastar script.
 - Load the Datastar script or import map one time in `<head>`.
-- Add the Datastar inspector only in development.
+- Add the Datastar inspector only during development.
 - Put the app shell around `{ children... }`.
 - Use the `datastar-templ` color-mode pattern for StellarUI shells.
 
@@ -58,13 +58,13 @@ featureRouter.Route("/{featureID}", func(item chi.Router) {
 })
 ```
 
-- Use the same structure for nested dynamic routes.
+- Use this structure for nested dynamic routes.
 - Register terminal chi wildcards, such as `/*`, directly when necessary.
 - Render the initial `GET /` with `RenderPage`.
 - Use same-route SSE with `Accept: text/event-stream` and `Datastar-Request` by default.
 - Add `/updates` only when the product route needs a stream on a different route.
 - Mutation routes change state, emit an event, and usually return `204`.
-- Register product routes in browser navigation. Do not keep `/ui/*` as the primary entry.
+- Register product routes in browser navigation. Do not use `/ui/*` as the primary entry.
 
 ## Components
 
@@ -116,7 +116,7 @@ router.Get("/hotreload", func(w http.ResponseWriter, r *http.Request) {
 
 ## Verification
 
-If the repository has a task runner, use it. If not, run:
+Use the repository task runner when it is available. If it is not available, run:
 
 ```bash
 templ generate

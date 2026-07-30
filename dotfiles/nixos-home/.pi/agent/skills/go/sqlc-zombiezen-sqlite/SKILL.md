@@ -1,6 +1,6 @@
 ---
 name: sqlc-zombiezen-sqlite
-description: Defines sqlc and sqlc-gen-zombiezen setup for Go SQLite services. Use for migrations, queries, sqlc configs, generated zz packages, and code generation.
+description: Defines sqlc and sqlc-gen-zombiezen configuration for Go SQLite services.
 ---
 
 # sqlc and zombiezen SQLite
@@ -11,13 +11,13 @@ Use the `ria-pulse` pattern with `zombiezen.com/go/sqlite` and `github.com/delan
 
 Examine `~/repos/ria-pulse`:
 
-- `Taskfile.yml`: tool, sqlc, templ, and build tasks.
-- `go.mod`: tool entries.
-- `services/*/sql/sqlc.yaml`: service configurations.
-- `services/*/sql/migrations/*.sql`: embedded migrations.
-- `services/*/sql/queries/*.sql`: named queries.
-- `services/*/server.go`: migration and database setup.
-- `services/*/service.go` and `db.go`: transactions and generated calls.
+- Examine `Taskfile.yml` for tool, sqlc, templ, and build tasks.
+- Examine `go.mod` for tool entries.
+- Examine `services/*/sql/sqlc.yaml` for service configurations.
+- Examine `services/*/sql/migrations/*.sql` for embedded migrations.
+- Examine `services/*/sql/queries/*.sql` for named queries.
+- Examine `services/*/server.go` for migration and database setup.
+- Examine `services/*/service.go` and `db.go` for transactions and generated calls.
 
 ## Service files
 
@@ -58,7 +58,7 @@ sql:
         plugin: zz
 ```
 
-Run `sqlc generate` from the `sql` directory. Relative paths depend on that directory.
+Run `sqlc generate` from the `sql` directory. Relative paths depend on this directory.
 
 ## Taskfile
 
@@ -72,7 +72,7 @@ Run `sqlc generate` from the `sql` directory. Relative paths depend on that dire
 - Run `go tool sqlc generate` in each configuration directory.
 - Make build tasks depend on `sqlc`.
 
-Core command:
+Use this core command:
 
 ```bash
 dir=$(dirname "$config")
@@ -141,7 +141,7 @@ WHERE id IN (sqlc.slice('ids'));
 
 ## Generated API
 
-The plugin generates:
+The plugin generates these items:
 
 - `<TableSingular>Model` table models.
 - CRUD functions where applicable.
@@ -152,7 +152,7 @@ The plugin generates:
 
 Use `Once*` only for one call in a transaction. It prepares a statement for each call.
 
-For loops and batches, prepare before the loop and reuse `Run`:
+For loops and batches, prepare before the loop. Reuse `Run`:
 
 ```go
 return db.WriteTX(ctx, func(tx *sqlite.Conn) error {
@@ -212,4 +212,4 @@ task sqlc
 go test ./...
 ```
 
-Use the full repository build or code-generation task if the repository has one.
+Use the full repository build or code-generation task when the repository has one.
