@@ -1,6 +1,6 @@
 ---
 name: wayfinder
-description: Maps an effort that one session cannot resolve into decision tickets. Resolves one frontier decision per session until implementation tickets are possible.
+description: Maps an effort that one session cannot resolve into decision tickets. Resolves frontier decisions continuously until user input is required or implementation tickets are possible.
 disable-model-invocation: true
 license: MIT. See ../../references/mattpocock-skills/LICENSE
 ---
@@ -81,7 +81,7 @@ Use this mode when the user gives a large effort that is not clear.
 7. Run all unblocked research tickets in one parallel `subagent` call. Use `wayfinder-researcher`, new context, different questions, and read-only project scope.
 8. Post each research result as its ticket answer. Close the ticket. Add its linked title and one-line result to `Decisions so far`.
 9. Add questions that research clearly defined. Update fog.
-10. Stop after charting and research resolution. Report the frontier by linked title.
+10. After research resolution, claim the first frontier ticket. Continue until user input is required, no frontier remains, or the user stops work.
 
 Charting resolves no grilling, prototype, or task ticket.
 
@@ -97,7 +97,10 @@ Use this mode when the user gives a map URL or number.
 6. Post the answer. Close the ticket. Add its linked title and one-line result to `Decisions so far`.
 7. Create tickets for questions that became clear. Add blocking edges. Remove these questions from fog.
 8. Close a ticket that is not part of the destination. Add its linked title and reason to `Out of scope`.
-9. Stop after one non-research ticket.
+9. After each resolved ticket, read tracker state and claim the next frontier ticket.
+10. Continue until user input is required, no frontier remains, or the user stops work.
+
+Do not report a resolved ticket as a stopping point when another frontier ticket is available.
 
 When frontier and fog are empty, the route is clear. Recommend `/skill:to-tickets` with the map and closed decision tickets as its source. Do not start implementation from the map.
 
