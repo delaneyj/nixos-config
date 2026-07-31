@@ -51,6 +51,21 @@ A request for multiple pull requests authorizes at most one commit on each reque
 
 Stop this authorization when the requested pull requests exist or receive the requested update. Do not merge a pull request without separate authorization.
 
+## Parallel draft confirmation
+
+Pull-request publication authorization ends when the requested draft PRs exist.
+
+A request to load, activate, or confirm the next draft authorizes local post-merge cleanup, rebase, and checkout. It does not authorize:
+
+- A new commit or commit amendment.
+- A push or force-push.
+- A PR edit or ready-state change.
+- A merge.
+
+A local rebase must retain one issue commit and must not add a commit. After user confirmation, require explicit approval to update the existing PR before you push the rebased branch.
+
+Use the primary repository folder for serial user confirmation. Keep other draft branches in isolated worktrees until selected.
+
 The following requests do not authorize a commit:
 
 - Prepare a branch or pull request.

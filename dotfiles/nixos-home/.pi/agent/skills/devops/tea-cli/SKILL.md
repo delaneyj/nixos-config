@@ -195,6 +195,27 @@ tea pr edit <pr-number> --add-reviewers <issue-creator>
 
 Reviewer assignment can fail if the issue creator is the PR author. Report that result.
 
+## Parallel draft confirmation
+
+After parallel issue work publishes draft PRs, use a serial confirmation phase for user-visible behavior.
+
+1. Keep each unconfirmed branch in its isolated worktree until it is selected.
+2. Use the primary repository folder as the only confirmation checkout. Do not ask the user to run the application from a linked worktree.
+3. Select drafts in dependency and merge order. If there is no dependency, select the oldest issue first.
+4. Require clean primary and selected worktrees. Read the selected PR state.
+5. If the prior draft merged, complete post-merge cleanup and update `main` first.
+6. Rebase the selected branch on current `main` when an earlier draft merged or its base moved. Resolve overlap before confirmation.
+7. Remove the selected linked worktree. Switch the primary repository folder to the selected branch.
+8. Before confirmation, derive a checklist from the issue acceptance criteria and PR behavior. Never give only a generic test request.
+9. Give the route or page, required setup, numbered interactions, and the expected visible result after each interaction.
+10. For Datastar or other stateful browser behavior, require the main action two times and require a browser console error check. For server-only behavior, give the exact command and expected result.
+11. End each checklist with the exact response that records success, such as `confirmed`, and ask for full error output on failure.
+12. Do not start or stop an application that the user operates. Report the active branch, PR, and commit before the checklist.
+13. Keep the PR in draft state until the user confirms the user-visible behavior.
+14. A request to load, activate, or confirm the next draft authorizes local cleanup, rebase, and checkout only. It does not authorize a commit, push, force-push, PR edit, ready-state change, or merge.
+15. After confirmation, get explicit approval before a push or PR update. Then wait for the user to merge the PR.
+16. Repeat this procedure for each draft. After the final merge, return the primary folder to clean, updated `main`.
+
 ## Post-merge cleanup
 
 When the user says a PR was merged:
