@@ -4,32 +4,8 @@
   "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "high",
   "packages": [
-    "npm:pi-subagents@0.37.2"
+    "npm:pi-herdr-subagents@0.1.5"
   ],
-  "subagents": {
-    "defaultModel": "openai-codex/gpt-5.6-terra",
-    "defaultThinking": "medium",
-    "agentOverrides": {
-      "advisor": {
-        "thinking": "medium"
-      },
-      "oracle": {
-        "thinking": "medium"
-      },
-      "planner": {
-        "thinking": "medium"
-      },
-      "reviewer": {
-        "thinking": "medium"
-      },
-      "scout": {
-        "thinking": "medium"
-      },
-      "worker": {
-        "thinking": "medium"
-      }
-    }
-  },
   "hideThinkingBlock": true,
   "theme": "dark"
 }

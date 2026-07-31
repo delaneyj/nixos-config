@@ -5,10 +5,10 @@
 
 buildNpmPackage {
   pname = "pi-dev";
-  version = "0.80.6";
+  version = "0.83.0";
 
   src = ./.;
-  npmDepsHash = "sha256-eOS71R19TYqq5liLJBlFTOGlPUdlMzVHaV34zWPoHOM=";
+  npmDepsHash = "sha256-fEhcwH5dhSywp/WeHgdbNMAOKsLr1XzozwgV/xON/7g=";
   makeCacheWritable = true;
 
   dontNpmBuild = true;
