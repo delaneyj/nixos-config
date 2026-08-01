@@ -258,7 +258,6 @@ let
   cosCli = pkgs.callPackage ./pkgs/cos-cli.nix { };
   piDev = unstablePkgs.callPackage ./pkgs/pi-dev { };
   rtk = pkgs.callPackage ./pkgs/rtk.nix { };
-  picotron = pkgs.callPackage ./pkgs/picotron.nix { };
   llamaCppVulkan = unstablePkgs.llama-cpp.override {
     vulkanSupport = true;
   };
@@ -649,7 +648,6 @@ in
     obs-studio
     openssl
     pciutils
-    picotron
     piDev
     pulseaudio
     pv
