@@ -7,6 +7,9 @@
   ...
 }:
 
+let
+  cosmicAcIdleInhibit = pkgs.callPackage ../pkgs/cosmic-ac-idle-inhibit.nix { };
+in
 {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
@@ -57,8 +60,27 @@
 
   swapDevices = [ ];
 
-  # ThinkPad-specific: skip auto-starting COSMIC apps.
-  systemd.user.services.cosmic-startup-apps.enable = false;
+  services.logind.settings.Login = {
+    HandleLidSwitch = "suspend";
+    HandleLidSwitchDocked = "suspend";
+    HandleLidSwitchExternalPower = "suspend";
+  };
+
+  systemd.user.services = {
+    # ThinkPad-specific: skip auto-starting COSMIC apps.
+    cosmic-startup-apps.enable = false;
+
+    cosmic-ac-idle-inhibit = {
+      description = "Keep COSMIC awake while connected to AC power";
+      wantedBy = [ "graphical-session.target" ];
+      partOf = [ "graphical-session.target" ];
+      serviceConfig = {
+        ExecStart = lib.getExe cosmicAcIdleInhibit;
+        Restart = "on-failure";
+        RestartSec = 2;
+      };
+    };
+  };
 
   # Keep COSMIC Wacom workaround overlay off on ThinkPad.
   nixpkgs.overlays = lib.mkForce [ ];

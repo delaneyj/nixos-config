@@ -483,11 +483,11 @@ in
   services.displayManager.cosmic-greeter.enable = true;
   services.desktopManager.cosmic.enable = true;
 
-  # Configure XKB for COSMIC and XWayland.
+  # Configure Colemak as the default and QWERTY as an optional layout.
   services.xserver = {
     enable = true;
-    xkb.layout = "us";
-    xkb.variant = "colemak";
+    xkb.layout = "us,us";
+    xkb.variant = "colemak,";
   };
 
   services.keyd = {
