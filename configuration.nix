@@ -258,6 +258,7 @@ let
   cosCli = pkgs.callPackage ./pkgs/cos-cli.nix { };
   piDev = unstablePkgs.callPackage ./pkgs/pi-dev { };
   rtk = pkgs.callPackage ./pkgs/rtk.nix { };
+  picotron = pkgs.callPackage ./pkgs/picotron.nix { };
   llamaCppVulkan = unstablePkgs.llama-cpp.override {
     vulkanSupport = true;
   };
@@ -454,6 +455,7 @@ in
 
   # Enable networking
   networking.networkmanager.enable = true;
+  services.tailscale.enable = true;
 
   # Keep the time zone synchronized with the machine's current location.
   services.automatic-timezoned.enable = true;
@@ -583,7 +585,6 @@ in
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
@@ -648,6 +649,7 @@ in
     obs-studio
     openssl
     pciutils
+    picotron
     piDev
     pulseaudio
     pv

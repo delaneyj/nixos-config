@@ -15,9 +15,17 @@ export default function (pi: ExtensionAPI) {
     if (event.toolName !== "subagent") return;
 
     const input = event.input as SubagentInput;
-    const reviewer = input.agent === "reviewer";
+    const role = typeof input.agent === "string" ? input.agent.toLowerCase() : "";
 
-    input.model = reviewer ? "openai-codex/gpt-5.6-sol" : "openai-codex/gpt-5.6-terra";
-    input.thinking = reviewer ? "high" : "medium";
+    if (role === "reviewer") {
+      input.model = "openai-codex/gpt-5.6-sol";
+      input.thinking = "high";
+      return;
+    }
+
+    input.model = role === "worker"
+      ? "openai-codex/gpt-5.3-codex-spark"
+      : "openai-codex/gpt-5.6-terra";
+    input.thinking = "medium";
   });
 }

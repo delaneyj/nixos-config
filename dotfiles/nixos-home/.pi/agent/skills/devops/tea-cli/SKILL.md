@@ -161,6 +161,35 @@ git push -u origin HEAD
 
 Create the PR only with explicit current-turn approval.
 
+## WIP titles
+
+During agent PR implementation or revision, require the title `WIP: <title>`.
+
+Create agent-work PRs with one `WIP: ` prefix:
+
+```bash
+tea pr create --base main --head <branch> --title "WIP: <title>" --description "$(cat "$tmp")"
+```
+
+Before an authorized revision, read the title as JSON:
+
+```bash
+tea pr <pr-number> --output json
+```
+
+If the title does not start with `WIP: `, add one prefix. Do not duplicate the prefix:
+
+```bash
+tea pr edit <pr-number> --title "WIP: <title>"
+tea pr <pr-number> --output json
+```
+
+The required WIP title edit is authorized during authorized PR implementation or revision. Other metadata edits remain unauthorized unless existing rules permit them.
+
+Remove only the leading `WIP: ` when all requested implementation, tests, and independent review are complete. Do this only when the PR is ready for human review.
+
+Treat Gitea draft state and WIP title state separately. Keep draft rules where supported. The WIP title is mandatory without draft API support.
+
 PR text rules:
 
 - Use a short title that describes the result.
@@ -189,7 +218,6 @@ What changed:
 
 Tests: <command>
 EOF
-tea pr create --base main --head <branch> --title "..." --description "$(cat "$tmp")"
 tea pr edit <pr-number> --add-reviewers <issue-creator>
 ```
 
@@ -249,7 +277,7 @@ tea issue close <number>
 tea pr list --state open --output json
 tea pr <number> --comments
 tea pr checkout <number>
-tea pr create --base main --head <branch> --title "..." --description "..."
+tea pr create --base main --head <branch> --title "WIP: <title>" --description "..."
 tea pr review <number>
 tea pr approve <number>
 tea pr reject <number> --description "..."

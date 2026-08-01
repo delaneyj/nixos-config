@@ -26,6 +26,16 @@ A request to create, open, or publish a pull request authorizes its necessary co
 
 This mode applies to draft pull requests and normal pull requests. It can include implementation requested in the same turn.
 
+During agent PR implementation or revision, require the title `WIP: <title>`. Create agent-work PRs with one `WIP: ` prefix.
+
+Before an authorized revision, inspect the PR title with Tea JSON output. Add one `WIP: ` prefix if it is absent. Do not duplicate the prefix.
+
+The required WIP title edit is authorized during authorized PR implementation or revision. Other metadata and ready-state edits remain unauthorized unless existing rules permit them.
+
+Treat Gitea draft state and WIP title state separately. Keep draft rules where supported. The WIP title is mandatory without draft API support.
+
+Remove only the leading `WIP: ` when all requested implementation, tests, and independent review are complete. Do this only when the PR is ready for human review.
+
 A request to fix multiple tracked issues in parallel automatically includes one draft pull request for each issue. The user does not need to repeat the pull-request instruction. An explicit prohibition against commits, pushes, or pull requests disables this automatic authorization.
 
 For each parallel issue:
@@ -35,7 +45,7 @@ For each parallel issue:
 3. Complete the required verification.
 4. Make at most one commit under the current authorization.
 5. Push the issue branch.
-6. Open a draft pull request for review.
+6. Open a draft pull request for review with the title `WIP: <title>`.
 
 Use stacked draft pull requests when an issue has an implementation dependency. Set the dependent pull request's base to the dependency branch.
 
