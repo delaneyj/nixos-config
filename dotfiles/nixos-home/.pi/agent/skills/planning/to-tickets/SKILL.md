@@ -21,14 +21,17 @@ Inspect `git remote -v`.
 
 1. Read the full source conversation, map, decision tickets, and linked research.
 2. Read applicable code, tests, domain glossary, and ADRs.
-3. Draft tracer-bullet tickets. Each ticket delivers one verifiable behavior through all applicable layers.
-4. Give each ticket only blocking edges that prevent its start.
-5. Keep each ticket within one focused agent session.
-6. Present the numbered draft with title, blockers, delivered behavior, and acceptance criteria.
-7. Ask the user to approve the draft before tracker writes.
-8. Publish approved tickets in blocker-first order. Add native blocking relationships when the tracker supports them.
-9. Read published tickets. Report their names and URLs.
+3. Map the API and architecture spine. Map file and package ownership before ticket decomposition.
+4. Draft dependency-spine tickets before independent leaf tickets.
+5. Draft bounded leaf tickets. Each ticket delivers one verifiable behavior through all applicable layers.
+6. Give each ticket only blocking edges that prevent its start.
+7. Mark shared contracts and shared-file ownership. Do not allow leaf tickets to invent these contracts.
+8. Keep each ticket within one focused agent session.
+9. Present the numbered draft with title, blockers, delivered behavior, and acceptance criteria.
+10. Ask the user to approve the draft before tracker writes.
+11. Publish approved tickets in blocker-first order. Add native blocking relationships when the tracker supports them.
+12. Read published tickets. Report their names and URLs.
 
-Use one ticket for a mechanical repository-wide change only when no smaller change can keep validation green.
+Use one ticket for a mechanical repository-wide change only when no smaller change can keep validation green. Finish a ticket that unlocks many dependents before dependent tickets start.
 
 Do not add compatibility stages unless the user requests compatibility in the current task.

@@ -40,24 +40,28 @@ A request to fix multiple tracked issues in parallel automatically includes one 
 
 For each parallel issue:
 
-1. Use an isolated worktree branch.
-2. Implement and review only that issue's work.
-3. Complete the required verification.
-4. Make at most one commit under the current authorization.
-5. Push the issue branch.
-6. Open a draft pull request for review with the title `WIP: <title>`.
+1. Create an integration worktree and branch from one verified base.
+2. Finish the shared dependency spine before leaf work.
+3. Give each independent leaf slice an isolated temporary worktree and branch from that base.
+4. Do not let two agents edit one worktree concurrently.
+5. Do not let a slice worker commit. Require a reviewed patch or diff and targeted test evidence.
+6. Have one integration worker apply slices and resolve shared-file overlap.
+7. Rebase or integrate current `main` once at this boundary.
+8. Run full repository verification after integration and after review fixes.
+9. Make at most one authorized issue commit in the integration worktree.
+10. Push the issue branch and open a draft pull request with title `WIP: <title>`.
+11. Run one independent final review of the integrated pull request.
 
-Use stacked draft pull requests when an issue has an implementation dependency. Set the dependent pull request's base to the dependency branch.
+Use stacked draft pull requests when an issue has an implementation dependency. Set the dependent pull request base to the dependency branch.
 
-Before each commit, make sure that all answers are yes:
+Before the integration commit, make sure that all answers are yes:
 
-1. Does the current user message request pull-request publication, an existing pull-request code update, or parallel tracked-issue fixes?
-2. Is the commit necessary for one authorized pull-request branch?
-3. Does the commit contain only that pull request's work?
-4. Did the branch pass its required verification?
-5. Has no earlier commit been made on this branch under the current authorization?
+1. Does the current user message authorize this issue commit?
+2. Does the commit contain only the integrated issue work?
+3. Did the integrated branch pass required verification?
+4. Has no earlier authorized issue commit been made on this branch?
 
-A request for multiple pull requests authorizes at most one commit on each requested branch. This limit applies to single, parallel, and stacked pull requests.
+A request for multiple pull requests authorizes at most one integration commit for each requested issue branch. This limit applies to single, parallel, and stacked pull requests.
 
 Stop this authorization when the requested pull requests exist or receive the requested update. Do not merge a pull request without separate authorization.
 

@@ -21,9 +21,12 @@ You review code changes for correctness, safety, and maintainability.
 
 ## Process
 
+- Review high-risk slice architecture early when requested.
+- Review the integrated pull request once after integration.
 - Read the requested change and related context.
 - Verify claims with file paths and exact references.
 - Report findings by severity.
+- Do not repeat review without new code.
 
 ## Deliverable
 

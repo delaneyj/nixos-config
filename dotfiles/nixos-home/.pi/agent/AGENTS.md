@@ -9,7 +9,7 @@
 - Expand only for safety, irreversible operations, or ambiguity.
 - Never run `git commit` unless the current user message gives direct commit authorization or pull-request publication authorization. `finish`, `done`, `next`, `continue`, `ship`, or `complete` are not commit permission.
 - One direct commit request permits exactly one `git commit`. If the same turn says `commit and next` or `commit and continue`, commit only work completed before that request. Later work stays uncommitted and must be reported.
-- An explicit request to create, open, or publish a pull request authorizes the minimum necessary commit. A request to update an existing pull request with code changes gives the same authorization. This authorization includes work requested in the same turn. Make at most one commit under the current authorization on each requested pull-request branch. This rule applies to single, parallel, and stacked pull requests. A request to fix multiple tracked issues in parallel includes one draft pull request for each issue. It authorizes one commit on each verified issue worktree branch unless the user prohibits commits, pushes, or pull requests. Do not include unrelated work. A request to prepare a branch or pull request does not authorize a commit.
+- An explicit request to create, open, or publish a pull request authorizes the minimum necessary commit. A request to update an existing pull request with code changes gives the same authorization. This authorization includes work requested in the same turn. Make at most one commit under the current authorization on each requested pull-request branch. This rule applies to single, parallel, and stacked pull requests. A request to fix multiple tracked issues in parallel includes one draft pull request for each issue. It authorizes one integration commit on each verified issue branch unless the user prohibits commits, pushes, or pull requests. Do not include unrelated work. A request to prepare a branch or pull request does not authorize a commit.
 - During agent PR implementation or revision, require the title `WIP: <title>`. Create with one prefix. Before an authorized revision, inspect the JSON title and add one prefix if absent.
 - Remove only the leading `WIP: ` when implementation, tests, and independent review are complete. A title without it is only for human review. Treat draft state separately. The required WIP title edit is authorized during authorized PR work. Other metadata and ready-state edits are not authorized unless existing rules permit them.
 - Before any `git commit`, apply `~/.pi/agent/skills/workflow/no-unauthorized-commits/SKILL.md`. If another skill requires commits, report the work as uncommitted unless the current turn gives direct commit authorization or pull-request publication authorization.
@@ -19,6 +19,22 @@
 - For Go, do not add a package-level function, variable, constant, or type with one production use. Tests do not count as production uses. Export does not justify one use. Before completion, check each new package-level declaration and inline or localize one-off declarations.
 - If a project uses a development shell for authentication or tooling, run authenticated network commands through that shell.
 - When the user says the current issue branch pull request was merged, verify a clean tree, fetch and prune, switch to `main`, fast-forward pull, and delete the local issue branch. If normal deletion fails after a squash or rebase merge, force-delete only after `git diff main..<branch>` is empty.
+
+## Broad Work
+
+- Map the API and architecture spine. Map file and package ownership before you split broad or cross-cutting work.
+- Establish shared API contracts and finish dependency-spine work before leaf work starts.
+- Split verified independent leaf migrations into bounded slices. Finish dependency work before all dependents start.
+- Use `scout` for reconnaissance, dependency maps, inventories, call-site lists, and decomposition.
+- Use `worker` for bounded implementation, call-site migration, test or golden-file updates, mechanical fixes, PR metadata, and verification.
+- Use an expensive worker only for architecture, security, concurrency, hard diagnosis, conflict integration, or a documented Spark or Terra capability failure.
+- Do not let agents edit one worktree concurrently. Give each parallel slice an isolated temporary worktree and branch from one verified base.
+- Slice workers do not commit unless the user explicitly authorizes it. They return a reviewed patch or diff and targeted test evidence.
+- One integration worker applies slices, resolves shared-file overlap, and creates the one authorized issue commit.
+- Rebase or integrate current `main` once at the integration boundary. Do not repeat it during leaf work.
+- Run targeted tests in slices. Run full repository verification after integration, review fixes, and required user-visible checks.
+- Review high-risk slice architecture early. The integrator inspects routine slices. Run one independent final review of the integrated change.
+- Do not repeat review without new code. Re-slice oversized work. A worker reports completion or a concrete technical blocker.
 
 ## Primary/Manager Rule
 
@@ -31,9 +47,9 @@ This is a manager session.
 - The primary agent does not implement, edit files, run project code, or edit VCS/PR artifacts directly.
 - Use `subagent` to delegate implementation, testing, cleanup, PR preparation, and review work.
 - Use role-specific defaults:
-  - `worker` for implementation and cleanup.
-  - `scout` for reconnaissance and context gather.
-  - `reviewer` for quality and correctness review.
+  - `worker` is Spark at medium thinking for bounded execution.
+  - `scout` is Terra at medium thinking for reconnaissance and decomposition.
+  - `reviewer` provides independent final correctness review.
 - The primary agent never delegates recursively through subagents unless explicitly requested.
 - For review tasks, explicitly route to the `reviewer` role.
 - For non-review work, explicitly route to the `worker` role unless task is reconnaissance, then route to `scout`.
