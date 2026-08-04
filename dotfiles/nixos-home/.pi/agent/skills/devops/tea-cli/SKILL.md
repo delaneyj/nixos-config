@@ -93,10 +93,13 @@ git log --oneline --decorate main..HEAD
 git push -u origin HEAD
 ```
 
-Create PR automatically after the first coherent verified commit for issue-work flows.
-For explicit PR-only requests, keep explicit approval. Use exactly one `WIP: ` prefix.
+Create WIP PR immediately for issue-work with one `WIP: ` prefix.
+Use a body with planned behavior and `Tests: pending`.
+Try no-diff PR creation first when supported by the tracker.
+For issue-work only, if the tracker rejects no-diff PRs, create one empty commit named `chore: start issue N` and push it to open the PR.
+For explicit PR-only requests, keep explicit approval.
 
-If there is no base commit or no-diff PR creation is rejected, stop and request base-initialization authorization.
+If there is no base commit, stop and request base-initialization authorization.
 
 ## WIP title and reviewer
 Agent PRs need one `WIP: ` prefix:
@@ -113,7 +116,7 @@ Before PR revision:
 tea pr edit <number> --title "WIP: <title>"
 ```
 
-Remove the prefix only after implementation, tests, and independent review are complete.
+Remove the prefix only after implementation, required checks, required user-experienced-layer verification for user-visible work, and independent review are complete.
 
 Assign the issue creator as reviewer:
 
@@ -131,6 +134,8 @@ Use short title and ordered body:
 - `What changed:` result themes.
 - `Tests:` commands.
 - include `Closes #<number>` when applicable.
+- For issue-work bootstraps, use `Tests: pending` until implementation finishes.
+- Update `Tests:` to exact commands after implementation.
 
 Use a temp file for multiline description.
 
@@ -159,8 +164,8 @@ For real open-issue parallel draft PR workflows only:
 2. confirm in dependency order, oldest first when independent.
 3. switch the primary folder to selected branch for confirmation.
 4. if earlier draft merged, rebase selected branch on current `main`.
-5. confirmation must include exact steps, expected UI/CLI result, and end with `confirmed` or request full error output.
-6. PR stays draft until user confirms.
+5. confirmation must include exact steps and expected UI/CLI result, and report full error output on failure.
+6. PR draft state is handled separately from WIP naming and changes only when explicitly authorized.
 7. a request to confirm/rebase/check does not authorize commit, push, force-push, PR edit, ready-state change, or merge.
 
 ## Post-merge cleanup

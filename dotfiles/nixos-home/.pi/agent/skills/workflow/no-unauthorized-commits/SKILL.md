@@ -14,15 +14,21 @@ A direct request to work on a specific open tracker issue authorizes one impleme
 1. Reading issue + comments first.
 2. Verifying issue state is `open`.
 3. Issue-number branch creation.
-4. Exactly one coherent verified implementation commit.
-5. Exactly one push of that commit.
-6. Automatic WIP PR creation after that commit with exactly one `WIP: ` prefix.
+4. One branch push.
+5. Immediate PR opening for that issue branch with:
+   - one `WIP: ` prefix only,
+   - planned behavior in the body,
+   - `Tests: pending` until results are known.
+6. Try a no-diff PR first when the tracker supports it.
+7. If a no-diff PR is rejected, create exactly one empty bootstrap commit named `chore: start issue N` and push it to open the WIP PR.
+8. Keep exactly one leading `WIP: ` through implementation, validation, correction, and required independent review.
+9. Exactly one coherent verified implementation commit.
+10. Exactly one normal push of that implementation commit.
+11. Update PR body with exact `Tests:` commands from implementation.
 
 A request such as `continue`, `next`, or `finish` does not authorize issue-work.
 
-If the repo has no base commit or the tracker rejects a no-diff PR, stop and ask for minimum base-initialization authorization.
-
-Do not create an empty/bootstrap commit just to open a PR.
+If the repo has no base commit, stop and ask for separate base-initialization authorization.
 
 After this set, any later issue-related action (additional commits, pushes, PR revisions, metadata edits, ready-state changes, merges, or closes) requires explicit authorization under existing rules.
 
@@ -50,7 +56,7 @@ During agent PR work:
   `tea pr <number> --output json`
 - If missing, apply one non-duplicated prefix:
   `tea pr edit <number> --title "WIP: <title>"`
-- Remove only the leading `WIP: ` after implementation, tests, and independent review are complete.
+- Remove only the leading `WIP: ` after implementation, required checks, required user-experienced-layer verification for user-visible work, and independent review are complete.
 
 ## Parallel draft workflow
 Pull-request publication authorization does not permit:
@@ -62,9 +68,11 @@ Pull-request publication authorization does not permit:
 - merge.
 
 Use the primary repository for confirmation. Keep other draft branches in isolated worktrees until selected.
+- Do not change ready/draft state for WIP lifecycle completion unless explicitly authorized.
 
 ## One-commit limits
 Issue-work allows exactly one implementation commit per requested issue branch.
+A bootstrap commit is allowed once when no-diff PR is rejected and only if it is named `chore: start issue N`.
 For multiple tracked issues, authorize at most one integration commit per requested issue branch.
 During any one commit request, authorize at most one commit.
 

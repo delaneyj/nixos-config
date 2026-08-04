@@ -94,13 +94,26 @@ var (
 - Exceptions: interfaces, API boundaries, routes, recursion, generics, or two+ production call sites.
 - Before finish: list new package-level declarations, then remove one-use ones.
 
+## Context
+- `context.Background()` is allowed only inside a production `main` function that creates the process root context.
+- All other production functions should accept a caller context (`ctx context.Context`) and pass or derive from it.
+- Do not use `context.Background()` in helpers, servers, packages, examples, benchmarks, tests, test `main` functions, or any non-root process code.
+- In tests, use `t.Context()` and derive cancellation/deadline contexts from it.
+- Test subprocesses use `exec.CommandContext(t.Context(), ...)`.
+
 ## Ignored returns
-- Call function directly when all returns are intentionally ignored.
-- Keep explicit assignment only for error-producing or control-flow required calls.
+- Call a function directly when all return values are intentionally ignored.
+- Do not write `_ = f()` when Go permits `f()` as an expression statement.
 
 ```go
 hash.Write([]byte("sqlite\x00"))
+t.Cleanup(func() { store.Close() })
 ```
+
+- Use `_` only when Go syntax requires discarding one value from a multi-value assignment or declaration. Do not use it to silence an ignored single return value.
+
+## Tests
+- For test subprocesses, use `exec.CommandContext(t.Context(), ...)`.
 
 ## Validation
 - Run `gopls` for changed non-generated Go files.

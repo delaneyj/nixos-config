@@ -1727,10 +1727,14 @@ export default function subagentsExtension(pi: ExtensionAPI) {
       label: "Interrupt Subagent",
       description:
         "Terminate a running Pi-backed subagent by stopping its watcher, removing its running registry entry, and closing its pane. " +
+        "Use this only when the user explicitly says kill, stop, cancel, or interrupt that worker. " +
+        "For new requirements, do not interrupt: let the active subagent finish and resume with its session path. " +
         "This is not a turn-only interrupt: no subagent_result is emitted on this request. " +
         "Pane-not-found is treated as success to allow idempotent repeat calls.",
       promptSnippet:
         "Terminate a running Pi-backed subagent by stopping its watcher, removing its running registry entry, and closing its pane. " +
+        "Use this only when the user explicitly says kill, stop, cancel, or interrupt that worker. " +
+        "For new requirements, do not interrupt: let the active subagent finish and resume with its session path. " +
         "This is not a turn-only interrupt: no subagent_result is emitted on this request. " +
         "Pane-not-found is treated as success to allow idempotent repeat calls.",
       parameters: Type.Object({
