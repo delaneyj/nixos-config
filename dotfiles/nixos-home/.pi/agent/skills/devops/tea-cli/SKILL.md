@@ -5,126 +5,69 @@ description: Defines Gitea and Forgejo tea CLI use. Use for issues, pull request
 
 # Tea CLI
 
-Use `tea` for Gitea and Forgejo operations.
+Use `tea` for explicit Gitea/Forgejo tracker and repository work.
 
-## Setup
+## Scope guard
+Only run this workflow when the user explicitly requests tracker, issue, PR, release, or repository work.
+For normal code tasks, skip issue creation, PR work, worktrees, and review ceremonies.
 
-Use `tea` from `PATH`. Use the development shell in a Nix project when necessary:
+## Setup and auth
+- Use `tea` from PATH.
+- Use the Nix shell when project auth requires it:
 
 ```bash
 nix develop --command tea --version
 nix develop --command tea <args...>
 ```
 
-`tea` stores authentication in `$XDG_CONFIG_HOME/tea`.
-
-Do not request or print a token. If authentication is missing, tell the user to run:
+- Auth is stored at `$XDG_CONFIG_HOME/tea`.
+- Never ask for or print a token.
+- If auth is missing, ask for:
 
 ```bash
 tea login add
 ```
 
-## Safety
+- Use noninteractive flags when possible.
 
-Read operations are safe. Get explicit current-turn approval before these operations:
+## Safety gates
+Get current-turn approval before any write action:
+- create/edit/close/merge an issue, PR, release, label, milestone, webhook, or repository
+- PR merge/close
+- delete release or repository
+- admin actions
 
-- Create or edit an issue, PR, release, label, milestone, webhook, or repository.
-- Merge or close a PR.
-- Close an issue.
-- Delete a release or repository.
-- Run an administration command.
+Use JSON output for inspection and audit.
 
-Before `git commit`, use `no-unauthorized-commits`. A tea workflow does not authorize a commit.
-
-Before PR creation, examine status, branch, remotes, commits, and publication state.
-
-Use noninteractive flags. Stop for user input if necessary data is not clear.
+Never run `git commit` without `no-unauthorized-commits`.
 
 ## Issue branch gate
-
-Do not create or switch to an issue branch until you read an open issue.
-
-Read the issue and comments first:
+1. Read target issue first:
 
 ```bash
 tea issue <number> --comments --output json
 ```
 
-Require `state == "open"` before branch work.
+2. Require `state == "open"` before branch work.
+3. Do not start branch work from closed or replaced issues.
+4. For replacement issues:
+   - create replacement only with approval,
+   - read replacement issue,
+   - use replacement issue number for branch.
 
-For a replacement issue:
-
-1. Create the replacement only with current-turn approval.
-2. Read the replacement issue.
-3. Create or rename the branch with the replacement issue number.
-
-Do not start new work from a closed or replaced issue. Existing-work cleanup is the only exception.
-
-## Repository context
-
-Use the development shell for authenticated git network commands when the project requires it.
-
-Do not retry plain `git pull` or `git push` after a credential-helper failure.
-
-Before repository operations, run:
-
-```bash
-git remote -v
-git branch --show-current
-tea repo --output json
-```
-
-If repository detection is not clear, use one selector:
-
-```bash
-tea <cmd> --repo owner/repo
-tea <cmd> --remote origin
-tea <cmd> --login <name>
-```
-
-## Output
-
-Use JSON for parsed output:
-
-```bash
-tea issue list --output json --limit 50
-tea pr list --output json --state all --limit 50
-tea release list --output json
-```
-
-Use `--fields` for small tables:
-
-```bash
-tea pr list --fields index,title,state,author,updated,ci
-tea issue list --fields index,title,state,labels,updated
-```
-
-Quote API endpoints that contain `?` or `&`.
-
-## Issue workflow
-
-1. Find or create the applicable open issue.
-2. Do not invent an issue number.
-3. Read the issue and comments as JSON.
-4. Make a short branch label from the issue title.
-5. Use lowercase words separated by hyphens.
-6. Use two to five words that identify the issue. Include the issue number.
-7. Use `<number>-<short-label>` by default.
-8. Find local and remote branches before branch creation.
+## Branching
+- Base branch labels on the issue with:
+  `<number>-<two-to-five-word-lowercase-hyphen-slug>`.
+- Verify branch starts with the issue number before edits.
+- Check existing branches before create/switch.
 
 ```bash
 git branch --all --list '*<number>*'
-git branch --all --list '*<short-label>*'
+git remote -v
+git branch --show-current
 ```
 
-If a branch exists, switch to it:
-
-```bash
-git switch <branch>
-git switch --track origin/<branch>
-```
-
-If no branch exists, update the target base and create the branch:
+Create branch from fresh main:
 
 ```bash
 git switch main
@@ -132,15 +75,8 @@ git pull --ff-only
 git switch -c <number>-<short-label>
 ```
 
-Use authenticated development-shell git commands when necessary.
-
-After the switch, make sure the branch starts with the open issue number.
-
-Do not edit files on a branch that fails this check. Do not commit without new current-turn authorization.
-
-## PR workflow
-
-Before PR creation, run:
+## PR preflight and publish
+Before PR creation:
 
 ```bash
 git status --short
@@ -149,166 +85,53 @@ git remote -v
 git log --oneline --decorate main..HEAD
 ```
 
-- Stop if the branch is `main`.
-- Get the issue number from the branch name first.
-- Examine the log for all intended commits.
-- Report uncommitted or unpublished work.
-- Push the branch before PR creation.
+- Do not create PR from `main`.
+- Push branch before PR creation:
 
 ```bash
 git push -u origin HEAD
 ```
 
-Create the PR only with explicit current-turn approval.
+Create PR only with explicit approval.
 
-## WIP titles
-
-During agent PR implementation or revision, require the title `WIP: <title>`.
-
-Create agent-work PRs with one `WIP: ` prefix:
+## WIP title and reviewer
+Agent PRs need one `WIP: ` prefix:
 
 ```bash
-tea pr create --base main --head <branch> --title "WIP: <title>" --description "$(cat "$tmp")"
+tea pr create --base main --head <branch> --title "WIP: <title>" --description "..."
 ```
 
-Before an authorized revision, read the title as JSON:
+Before PR revision:
+- read title via `tea pr <number> --output json`.
+- if missing prefix, run one non-duplicated edit:
 
 ```bash
-tea pr <pr-number> --output json
+tea pr edit <number> --title "WIP: <title>"
 ```
 
-If the title does not start with `WIP: `, add one prefix. Do not duplicate the prefix:
+Remove the prefix only after implementation, tests, and independent review are complete.
+
+Assign the issue creator as reviewer:
 
 ```bash
-tea pr edit <pr-number> --title "WIP: <title>"
-tea pr <pr-number> --output json
-```
-
-The required WIP title edit is authorized during authorized PR implementation or revision. Other metadata edits remain unauthorized unless existing rules permit them.
-
-Remove only the leading `WIP: ` when all requested implementation, tests, and independent review are complete. Do this only when the PR is ready for human review.
-
-Treat Gitea draft state and WIP title state separately. Keep draft rules where supported. The WIP title is mandatory without draft API support.
-
-PR text rules:
-
-- Use a short title that describes the result.
-- Put `Why:` before `What changed:`.
-- In `Why:`, give the cause, user effect, and correction reason.
-- In `What changed:`, give commit themes and the result.
-- Do not include process logs, large test output, or speculative work.
-- Add `Closes #<number>` when applicable.
-- Assign the issue creator as reviewer.
-- Read the issue `user` field to identify that reviewer.
-- Pass newline characters. Do not pass literal `\n` text.
-
-Use a temporary file for a multiline body:
-
-```bash
-tmp=$(mktemp)
-cat > "$tmp" <<'EOF'
-Closes #<number>
-
-Why:
-- Root cause and user effect.
-- Reason for this correction.
-
-What changed:
-- Final result.
-
-Tests: <command>
-EOF
+tea issue <number> --output json
 tea pr edit <pr-number> --add-reviewers <issue-creator>
 ```
 
-Reviewer assignment can fail if the issue creator is the PR author. Report that result.
+If reviewer assignment fails, report the failure.
 
-## Parallel draft confirmation
+## PR body format
+Use short title and ordered body:
 
-After parallel issue work publishes draft PRs, use a serial confirmation phase for user-visible behavior.
+- `Why:` root cause, user effect, fix rationale.
+- `What changed:` result themes.
+- `Tests:` commands.
+- include `Closes #<number>` when applicable.
 
-1. Keep each unconfirmed branch in its isolated worktree until it is selected.
-2. Use the primary repository folder as the only confirmation checkout. Do not ask the user to run the application from a linked worktree.
-3. Select drafts in dependency and merge order. If there is no dependency, select the oldest issue first.
-4. Require clean primary and selected worktrees. Read the selected PR state.
-5. If the prior draft merged, complete post-merge cleanup and update `main` first.
-6. Rebase the selected branch on current `main` when an earlier draft merged or its base moved. Resolve overlap before confirmation.
-7. Remove the selected linked worktree. Switch the primary repository folder to the selected branch.
-8. Before confirmation, derive a checklist from the issue acceptance criteria and PR behavior. Never give only a generic test request.
-9. Give the route or page, required setup, numbered interactions, and the expected visible result after each interaction.
-10. For Datastar or other stateful browser behavior, require the main action two times and require a browser console error check. For server-only behavior, give the exact command and expected result.
-11. End each checklist with the exact response that records success, such as `confirmed`, and ask for full error output on failure.
-12. Do not start or stop an application that the user operates. Report the active branch, PR, and commit before the checklist.
-13. Keep the PR in draft state until the user confirms the user-visible behavior.
-14. A request to load, activate, or confirm the next draft authorizes local cleanup, rebase, and checkout only. It does not authorize a commit, push, force-push, PR edit, ready-state change, or merge.
-15. After confirmation, get explicit approval before a push or PR update. Then wait for the user to merge the PR.
-16. Repeat this procedure for each draft. After the final merge, return the primary folder to clean, updated `main`.
+Use a temp file for multiline description.
 
-## Post-merge cleanup
-
-When the user says a PR was merged:
-
-1. Run `tea pr <number> --output json`.
-2. Require `hasMerged: true`.
-3. Save the current branch name.
-4. Switch to the PR base when you are on the PR branch.
-5. Fetch, prune, and fast-forward the base through the authenticated shell.
-6. Delete the local PR branch with `git branch -d <branch>`.
-7. Report the current branch and tree status.
-
-Do not delete a remote branch without explicit approval.
-
-## Commands
-
-```bash
-# Identity
-tea login list
-tea login default
-tea whoami
-
-# Issues
-tea issue list --state open --output json
-tea issue <number> --comments
-tea issue create --title "..." --description "..."
-tea issue edit <number> --title "..." --description "..."
-tea issue close <number>
-
-# Pull requests
-tea pr list --state open --output json
-tea pr <number> --comments
-tea pr checkout <number>
-tea pr create --base main --head <branch> --title "WIP: <title>" --description "..."
-tea pr review <number>
-tea pr approve <number>
-tea pr reject <number> --description "..."
-tea pr merge <number>
-
-# Comments and releases
-tea comment <issue-or-pr-number> "..."
-tea release list --output json
-tea release create --tag <tag> --title "..." --note "..."
-tea release edit <tag> --title "..."
-tea release delete <tag>
-```
-
-Follow the safety and PR workflows before write commands.
-
-## API fallback
-
-Use `tea api` when no subcommand has the necessary option:
-
-```bash
-tea api '/repos/{owner}/{repo}/issues?state=open'
-tea api -X PATCH '/repos/{owner}/{repo}/issues/123' -F state=closed
-tea api -X POST '/repos/{owner}/{repo}/issues' -f title='Title' -f body='Body'
-tea api -X POST '/repos/{owner}/{repo}/issues' -d @issue.json
-```
-
-Use `-F` for typed JSON. Use `-f` for strings. Use `-d @file` for raw JSON.
-
-## Verification
-
-After a write operation, read the changed object:
+## Read-first verification
+After write operations:
 
 ```bash
 tea issue <number> --output json
@@ -316,4 +139,58 @@ tea pr <number> --output json
 tea release list --output json
 ```
 
-Give the affected URL or index and the command result.
+## Output style and API fallback
+Use JSON/list defaults and `--fields` for short tables.
+Use `tea api` only when subcommand lacks required options.
+
+```bash
+tea api '/repos/{owner}/{repo}/issues?state=open'
+tea api -X PATCH '/repos/{owner}/{repo}/issues/123' -F state=closed
+```
+
+## Parallel draft confirmation
+For real open-issue parallel draft PR workflows only:
+
+1. keep each draft branch in an isolated worktree.
+2. confirm in dependency order, oldest first when independent.
+3. switch the primary folder to selected branch for confirmation.
+4. if earlier draft merged, rebase selected branch on current `main`.
+5. confirmation must include exact steps, expected UI/CLI result, and end with `confirmed` or request full error output.
+6. PR stays draft until user confirms.
+7. a request to confirm/rebase/check does not authorize commit, push, force-push, PR edit, ready-state change, or merge.
+
+## Post-merge cleanup
+After user says PR merged:
+
+1. `tea pr <number> --output json` and require `hasMerged: true`.
+2. save branch name.
+3. switch to PR base.
+4. `git fetch --all --prune` and fast-forward base.
+5. `git branch -d <branch>`.
+6. report current branch and tree status.
+
+Do not delete remote branches without explicit approval.
+
+## Core command examples
+
+```bash
+# Issues
+tea issue list --state open --output json
+tea issue <number> --comments
+tea issue create --title "..." --description "..."
+tea issue close <number>
+
+# Pull requests
+tea pr list --state open --output json
+tea pr <number> --comments
+tea pr create --base main --head <branch> --title "WIP: <title>" --description "..."
+tea pr review <number>
+tea pr merge <number>
+
+# Releases
+tea release list --output json
+tea release create --tag <tag> --title "..." --note "..."
+tea release delete <tag>
+```
+
+After tracker write: read back and return affected issue/PR/release URL or index.

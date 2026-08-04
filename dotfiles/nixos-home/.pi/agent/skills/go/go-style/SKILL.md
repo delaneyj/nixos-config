@@ -5,50 +5,44 @@ description: Defines Go code style for domain types, encoding, serialization, co
 
 # Go Style
 
-Use these rules for all Go changes.
+Apply these rules to all Go changes.
 
 ## Files
-
-- Use one file for each concrete type, domain concept, or wire kind.
-- Use names such as `matrix2.go`, `matrix3.go`, and `matrix4.go`.
-- Keep type-specific encoding and serialization with the type.
-- Use central files only for shared dispatch, interfaces, and reused low-level helpers.
+- One file per concrete type, domain concept, or wire kind.
+- Use names like `matrix2.go`, `matrix3.go`, `matrix4.go` for type groups.
+- Keep type-specific encoding with the owning type.
+- Keep shared dispatch, interfaces, and low-level helpers in central files.
 
 ## Names
+- Use standard Go initialisms.
+- Do not keep all-caps acronyms in domain names.
 
-Use standard Go initialisms only. Do not use all-capital domain acronyms. Use `OwlSource`, `RonValue`, and `RdfTerm`.
-
-## Domain types
-
-- Put applicable interface methods directly on owned concrete types.
-- Do not add an adapter when an owned type can have the method.
-- Use wrappers only for primitives, external types, interface boundaries, or necessary public API behavior.
+## Domain methods
+- Put logic on concrete owners.
+- Avoid adapters when method can be on owned type.
+- Use wrappers only for primitives, external types, boundaries, or explicit public API needs.
 
 ## Serialization
+- Keep serialization on owning type.
+- Do not centralize behavior that belongs to one type.
+- Use shared helpers only when at least two distinct types need mechanics.
+- Do not pipe JSON into `ron.FromJSON` or `ron.FromJSONCompact`.
+- Use `ron.Marshal`, `ron.MarshalCompact`, `ron.MarshalInto`, `ron.NewEncoder` directly.
+- Use `ron.FromJSON` only for true JSON bytes.
+- Remove avoidable JSON-to-RON chains.
 
-- Let each type own its serialization methods.
-- Do not use a central type switch for behavior that belongs to one type.
-- Use shared helpers only for mechanics with more than one use.
-- Do not use JSON between a Go value and RON.
-- Use `ron.Marshal`, `ron.MarshalCompact`, `ron.MarshalInto`, or `ron.NewEncoder` directly.
-- Do not send `json.Marshal` output to `ron.FromJSON` or `ron.FromJSONCompact`.
-- Use `ron.FromJSON` only for bytes that originate as JSON.
-- Before you finish, find and remove avoidable JSON-to-RON chains.
+## Variadics
+- Use variadic params for homogeneous values when callers do not need a slice.
+- Use slices when ownership, capacity, nil, or allocation matters.
+- Pass slice values with `values...`.
 
-## Variadic parameters
-
-- Use variadic parameters for homogeneous values when callers do not need a slice.
-- Use a slice when ownership, capacity, nil meaning, or allocation is important.
-- Use `values...` when you send a slice to a variadic function.
-
-For primitive encoding with more than one use, add generic variadic append helpers:
+For repeated primitive append logic use typed generic helper:
 
 ```go
 func appendRawInt64[T ~int64](dst []byte, values ...T) []byte
-func appendRawUint64[T ~uint64](dst []byte, values ...T) []byte
 ```
 
-Use slice expansion for fixed arrays:
+For fixed arrays use expansion:
 
 ```go
 appendRawInt64(dst, v[:]...)
@@ -56,118 +50,69 @@ appendRawFloat64s(dst, v[:]...)
 ```
 
 ## Composite literals
-
-Use multiline keyed literals by default. Include variables, returns, configurations, constructors, and decoded values.
+- Use multiline keyed literals by default for structs, configs, decoded values, returns.
 
 ```go
 var Line3Meta = Meta{
-    WireName: "line3",
-    Label:    "Line 3",
-    Icon:     "material-symbols:process-chart",
-    Group:    GroupGeometry,
+	WireName: "line3",
+	Label:    "Line 3",
+	Icon:     "material-symbols:process-chart",
+	Group:    GroupGeometry,
 }
 ```
 
-Use one line only for a very small local test fixture when it gives a clear test.
-
-Use multiline nested literals:
-
-```go
-return Box2{
-    Min: Float64V2{
-        math.Inf(1), math.Inf(1),
-    },
-    Max: Float64V2{
-        math.Inf(-1), math.Inf(-1),
-    },
-}
-```
-
-Break long calls across lines:
+- Use one-line only for tiny local fixtures.
+- Break long calls over lines.
 
 ```go
 return appendRawFloat64s(
-    appendHeader(dst, sphereKind),
-    v.Center[0], v.Center[1], v.Center[2],
-    v.Radius,
+	appendHeader(dst, sphereKind),
+	v.Center[0], v.Center[1], v.Center[2],
+	v.Radius,
 )
 ```
 
 ## Control flow
-
-- Put a blank line between logical phases.
-- Put a blank line after an early-return guard.
-- Put a blank line before the last fallback after a nontrivial conditional block.
+- Add blank line between logical phases.
+- Add blank line after early-return guard.
+- Add blank line before final fallback after nontrivial conditionals.
 
 ## Variables
-
-Group related zero-value variables with the same scope:
+- Group zero-values with same scope:
 
 ```go
 var (
-    resumedBytes int64
-    file         *os.File
+	resumedBytes int64
+	file         *os.File
 )
-expectedSize := int64(-1)
 ```
 
-Use `:=` with explicit conversion for nonzero sentinel values.
+- Use explicit conversion for sentinel values.
 
 ## Package-level declarations
-
-Do not add a package-level function, variable, constant, or type with one production use.
-
-- Tests do not count as production uses.
-- Export does not justify one production use.
-- Inline one-off logic or use a local closure.
-- Use exceptions only for necessary interfaces, API boundaries, routes, recursion, generic reuse, or two production call sites.
-
-Before you finish:
-
-1. Examine each new package-level declaration in `git diff`.
-2. Find each production use.
-3. Remove or localize declarations with fewer than two production call sites.
-4. Keep an exception only when it matches the list above.
+- Never add one-use package-level function/var/const/type with production use.
+- Exceptions: interfaces, API boundaries, routes, recursion, generics, or two+ production call sites.
+- Before finish: list new package-level declarations, then remove one-use ones.
 
 ## Ignored returns
-
-Call a function directly when you can safely discard all returned values.
+- Call function directly when all returns are intentionally ignored.
+- Keep explicit assignment only for error-producing or control-flow required calls.
 
 ```go
 hash.Write([]byte("sqlite\x00"))
 ```
 
-Do not write:
-
-```go
-_, _ = hash.Write([]byte("sqlite\x00"))
-```
-
-Use explicit ignored assignments only for error-producing APIs or interface and control-flow requirements.
-
 ## Validation
-
-After an important Go change, run gopls, usual Go validation, and a binary build.
-
-Use project-local gopls when it is available:
+- Run `gopls` for changed non-generated Go files.
+- Run project-local `gopls` if available.
 
 ```bash
 go tool gopls check ./path/to/changed.go
 ```
 
-If no project-local gopls is available, use `gopls check`. In Nix projects, add `gopls` to the development shell when necessary.
-
-```bash
-nix develop --command gopls check ./path/to/changed.go
-```
-
-Do not use `gopls check ./...`. Give gopls explicit non-generated Go file paths.
-
-```bash
-nix develop --command gopls check $(find cmd internal web -name '*.go' -not -name '*_templ.go' -print)
-```
-
-If no project test and build tasks are available, run:
+- In Nix, run `nix develop --command gopls check ...` when needed.
+- Avoid `gopls check ./...`.
+- Then run project build/test task:
 
 ```bash
 go test ./...

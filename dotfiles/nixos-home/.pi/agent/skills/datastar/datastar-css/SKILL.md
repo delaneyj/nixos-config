@@ -5,76 +5,57 @@ description: Defines CSS style for Datastar and templ UIs. Use for CSS in Datast
 
 # Datastar CSS
 
-Use semantic HTML, CSS state, and coarse morphing. Do not use JavaScript when CSS can perform the task.
+Use semantic HTML, CSS state, and coarse morphing. Prefer CSS over JavaScript.
 
-## HTML
-
-- Select semantic elements before classes.
-- Give inputs labels. Give buttons names for accessibility.
-- Use fieldsets and legends when applicable.
+## HTML and behavior
+- Prefer semantic elements and explicit labels/names.
+- Use `fieldset` and `legend` where useful.
 - Style `data-class:*`, `aria-*`, and `hidden` states.
 - Do not use `<form>` in Datastar app pages.
-- Use signal-bound design-system controls and explicit Datastar actions.
+- Use signal-bound controls and explicit Datastar actions.
 
 ## Design tokens
+- Use CSS variables for all reusable values: colors, spacing, sizing, radii, shadows, durations, z-index, layers.
+- Check `stellar.css` and `stellarui.css` before adding tokens.
+- Reuse existing Stellar variables first.
+- Only define a new variable at the smallest shared owner.
+- Literal colors/sizes may repeat only for one-time use, `0`, percentages, intrinsic keywords, unitless multipliers.
+- Use existing border-width variable for one-pixel lines.
+- Keep query scope local to the component and document need.
 
-Use CSS custom properties for all project design values.
+## Structure and selectors
+- Prefer modern CSS nesting.
+- Use semantic selectors inside feature root before adding classes.
+- Add classes only for ownership boundaries or custom elements.
+- Keep selectors low-specificity; use `:where()` when needed.
+- Use grid/flex, `minmax()`, logical properties, and fluid sizing.
+- Action bars should wrap with explicit gaps.
+- Avoid inline styles except for dynamic values.
 
-- Do not add literal colors, spacing, sizes, radii, shadows, durations, layers, or layout measures with two or more uses.
-- Examine `stellar.css` and `stellarui.css` first.
-- Use the Stellar variable with the applicable meaning.
-- If none exists, define one variable at the smallest shared owner.
-- Do not repeat fallback literals at use sites.
-- Literal `0`, percentages, intrinsic keywords, and unitless multipliers are permitted.
-- Use an existing border-width variable for a one-pixel line.
-- Use intrinsic grid or flex layouts before width breakpoints.
-- Scope a necessary query to its component and document the cause.
+## Datastar/state handling
+- Toggle meaningful classes via `data-class:*` (`loading`, `open`, etc.).
+- Use CSS transitions that survive patched/reordered DOM.
+- Use `data-ignore-morph` only for client-owned regions.
 
-## Structure
+## Code editor hard gate
+Before editor color edits:
+- Keep `.cm-content` transparent when `drawSelection` is active.
+- Use native `::selection` when inversion is required.
+- Use `var(--code-editor-fg)` for selection background.
+- Use `var(--code-editor-bg)` for selected text color.
+- Keep read-only editors focusable/selectable.
+- Compare host reference and root dark class before changing editor background.
 
-- Use modern CSS nesting for project CSS.
-- Use semantic selectors nested in layout roots before new classes.
-- Add a class only for an ownership boundary or custom element.
-- Scope styles to the feature root.
-- Use low-specificity selectors and `:where()` when necessary.
-- Use grid, flex, `minmax()`, logical properties, and fluid sizes.
-- Let action bars wrap with explicit tokenized gaps.
-- Use inline styles only for dynamic values or established small exceptions.
-
-## Code editors
-
-Before you change code-editor colors, make sure morphs do not replace the editor host.
-
-- Keep `.cm-content` transparent when CodeMirror `drawSelection` is active.
-- A content background with a color hides the selection layer.
-- Use native `::selection` when selected text must invert colors.
-- Use `var(--code-editor-fg)` for the selection background.
-- Use `var(--code-editor-bg)` for the selection text.
-- Keep read-only editors focusable and selectable.
-- Correct selection behavior before you change the editor background.
-- Do not use local theme variables to hide a repeated-initialization fault.
-- If an action changes editor colors, compare the host reference and root dark class before you change CSS.
-
-## Datastar states
-
-- Toggle meaningful classes such as `loading` and `open` with `data-class:*`.
-- Use CSS for visibility and animation.
-- Make transitions safe for patched or reordered elements.
-- Use `data-ignore-morph` only for DOM that server rendering does not own.
-
-## Do not use
-
-- Nonsemantic element groups when semantic HTML is applicable.
-- Deep class hierarchies when scoped nested selectors are clear.
-- Client JavaScript for CSS or Datastar behavior.
-- Viewport-only layouts that fail on narrow screens.
-- Hard-coded project design values.
+## Do not
+- Replace semantic structure with nonsemantic wrappers.
+- Build deep class chains when scoped nested selectors are clear.
+- Use viewport-only layouts without narrow-screen support.
+- Use JS for CSS/Datastar behavior.
+- Keep repeated design literals.
 
 ## Verification
-
-1. Examine changed CSS for flat selectors that are not necessary.
-2. Examine each added value and remove design literals.
-3. Use existing tokens before you add a scoped token.
-4. Make sure generated markup is semantic.
-5. Examine labels, names, keyboard use, and ARIA.
-6. For Go and templ projects, run `templ generate` and the usual tests or build.
+1. Remove unnecessary flat selectors.
+2. Remove all repeated design literals.
+3. Confirm token reuse before adding scoped tokens.
+4. Verify generated markup stays semantic and accessible.
+5. Run project templ checks/tests for Go-templ changes.

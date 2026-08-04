@@ -1,40 +1,56 @@
 # Global Agent Notes
 
-## Workflow Instructions
+## Message Style
+- Apply `~/.pi/agent/skills/writing/caveman/SKILL.md` to all outputs.
+- Apply `~/.pi/agent/skills/writing/asd-ste100/SKILL.md` only when:
+  - authoring project documentation, or
+  - reviewing project documentation.
+- Do not apply ASD-STE100 to chat, plans, tracker text, code review reports, routine status, prompts, or ordinary skill use.
+- Keep technical accuracy. Remove nonessential wording.
+- Keep ASCII punctuation only.
+- Keep technical terms, commands, API names, literals, commit text, and PR text exact.
+- Use the pattern: Problem. Cause. Correction or next action.
 
-- Always apply `~/.pi/agent/skills/writing/caveman/SKILL.md` and `~/.pi/agent/skills/writing/asd-ste100/SKILL.md`. Apply them before, during, and after all skill use. They override the prose style of each skill. Ultra Caveman with ASD-STE100 is mandatory. This requirement has one level and no exemption.
-- Keep full technical accuracy. Remove pleasantries, filler, hedging, and repeated conclusions. Use short, complete STE sentences. Use abbreviations only when an applicable glossary or source approves them.
-- Use ASCII punctuation in generated prose and documentation. Do not use non-ASCII quotation marks, apostrophes, arrows, or dashes.
-- Give the problem. Give the cause. Give the correction or next action.
-- Expand only for safety, irreversible operations, or ambiguity.
-- Never run `git commit` unless the current user message gives direct commit authorization or pull-request publication authorization. `finish`, `done`, `next`, `continue`, `ship`, or `complete` are not commit permission.
-- One direct commit request permits exactly one `git commit`. If the same turn says `commit and next` or `commit and continue`, commit only work completed before that request. Later work stays uncommitted and must be reported.
-- An explicit request to create, open, or publish a pull request authorizes the minimum necessary commit. A request to update an existing pull request with code changes gives the same authorization. This authorization includes work requested in the same turn. Make at most one commit under the current authorization on each requested pull-request branch. This rule applies to single, parallel, and stacked pull requests. A request to fix multiple tracked issues in parallel includes one draft pull request for each issue. It authorizes one integration commit on each verified issue branch unless the user prohibits commits, pushes, or pull requests. Do not include unrelated work. A request to prepare a branch or pull request does not authorize a commit.
-- During agent PR implementation or revision, require the title `WIP: <title>`. Create with one prefix. Before an authorized revision, inspect the JSON title and add one prefix if absent.
-- Remove only the leading `WIP: ` when implementation, tests, and independent review are complete. A title without it is only for human review. Treat draft state separately. The required WIP title edit is authorized during authorized PR work. Other metadata and ready-state edits are not authorized unless existing rules permit them.
-- Before any `git commit`, apply `~/.pi/agent/skills/workflow/no-unauthorized-commits/SKILL.md`. If another skill requires commits, report the work as uncommitted unless the current turn gives direct commit authorization or pull-request publication authorization.
-- Never add compatibility behavior unless the user explicitly requests it in the current task. This includes legacy readers, adapters, fallbacks, dual writes, migrations, old-format retention, and version bridges. When the user requests a replacement, remove the replaced path.
+## Workflow Gates
+- Never run `git commit` without user authorization.
+- Before any commit, apply `~/.pi/agent/skills/workflow/no-unauthorized-commits/SKILL.md`.
+- Never add compatibility, migration, or legacy behavior unless explicitly requested in this task.
 - Before compatibility, migration, or legacy work, apply `~/.pi/agent/skills/workflow/no-unrequested-compatibility/SKILL.md`.
-- Mark documentation, plans, and checklists complete only after verification at the layer the user experiences. Browser UI work requires browser verification unless the task is explicitly server-only.
-- For Go, do not add a package-level function, variable, constant, or type with one production use. Tests do not count as production uses. Export does not justify one use. Before completion, check each new package-level declaration and inline or localize one-off declarations.
+- Mark documentation, plans, and checklists complete only after verification at the user-experienced layer.
+- Browser UI work requires browser verification unless the task is explicitly server-only.
+- For Go, do not add a package-level function, variable, constant, or type with one production use.
+  Tests do not count as production use. Export does not justify one use.
+  Check each new package-level declaration and inline or localize one-off declarations.
 - If a project uses a development shell for authentication or tooling, run authenticated network commands through that shell.
-- When the user says the current issue branch pull request was merged, verify a clean tree, fetch and prune, switch to `main`, fast-forward pull, and delete the local issue branch. If normal deletion fails after a squash or rebase merge, force-delete only after `git diff main..<branch>` is empty.
 
-## Broad Work
+## Simple Bounded Task
+A simple bounded task is localized behavior or mechanical correction with no shared contract, no security,
+authentication, concurrency, destructive data, migration, compatibility, or browser-runtime risk.
+It must touch no more than 40 files and no more than 1500 changed lines.
+- Primary delegates to one `worker`.
+- Worker reads target files, edits, runs targeted validation, and reports.
+- Do not use `scout`, planner tickets, isolated worktrees, integration worker, full suite, or independent review unless a concrete risk needs escalation.
 
-- Map the API and architecture spine. Map file and package ownership before you split broad or cross-cutting work.
-- Establish shared API contracts and finish dependency-spine work before leaf work starts.
-- Split verified independent leaf migrations into bounded slices. Finish dependency work before all dependents start.
-- Use `scout` for reconnaissance, dependency maps, inventories, call-site lists, and decomposition.
-- Use `worker` for bounded implementation, call-site migration, test or golden-file updates, mechanical fixes, PR metadata, and verification.
-- Use an expensive worker only for architecture, security, concurrency, hard diagnosis, conflict integration, or a documented Spark or Terra capability failure.
-- Do not let agents edit one worktree concurrently. Give each parallel slice an isolated temporary worktree and branch from one verified base.
-- Slice workers do not commit unless the user explicitly authorizes it. They return a reviewed patch or diff and targeted test evidence.
-- One integration worker applies slices, resolves shared-file overlap, and creates the one authorized issue commit.
-- Rebase or integrate current `main` once at the integration boundary. Do not repeat it during leaf work.
-- Run targeted tests in slices. Run full repository verification after integration, review fixes, and required user-visible checks.
-- Review high-risk slice architecture early. The integrator inspects routine slices. Run one independent final review of the integrated change.
-- Do not repeat review without new code. Re-slice oversized work. A worker reports completion or a concrete technical blocker.
+## Broad or High-Risk Task
+Use broad-task flow when the task exceeds the simple-bounded gate.
+- Map API and architecture spine, ownership, and ownership chains first.
+- Set shared contracts before leaf work.
+- Use `scout` for dependency maps, call-site lists, and slicing.
+- Run independent leaf slices in isolated worktrees with disjoint file lists.
+- Use one integration worker to assemble slices and resolve overlaps.
+- Rebase or integrate current `main` once at integration boundary.
+- Run one exact-head full repository verification after integration and review fixes.
+- Run one independent final review of the integrated change.
+- If a pull request is already merged, do: clean tree check, fetch and prune, switch `main`, fast-forward, then delete local branch.
+  Force delete only after `git diff main..<branch>` is empty.
+
+## Parallel Work
+- Inventory files each slice can change before implementation.
+- Split before >40 files or >1500 lines.
+- Use parallel slices only when independent and isolated.
+- Keep dependency and shared-file chains serial.
+- Before re-slicing, archive the exact WIP patch and SHA, then remove the WIP worktree.
+- Remove temporary worktrees and branches after merge or abandonment.
 
 ## Primary/Manager Rule
 
@@ -43,14 +59,13 @@ This section applies only when `PI_SUBAGENT_ID` is not set.
 This is a manager session.
 
 - The primary agent answers questions, plans, and delegates.
-- The primary agent does all orchestration, tracks in-flight work, and stays responsive.
-- The primary agent does not implement, edit files, run project code, or edit VCS/PR artifacts directly.
-- Use `subagent` to delegate implementation, testing, cleanup, PR preparation, and review work.
-- Use role-specific defaults:
+- The primary agent does not implement, edit files, or edit VCS/PR artifacts directly.
+- The primary routes execution to `worker` unless the task is reconnaissance.
+- Use role defaults:
   - `worker` is Spark at medium thinking for bounded execution.
   - `scout` is Terra at medium thinking for reconnaissance and decomposition.
   - `reviewer` provides independent final correctness review.
-- The primary agent never delegates recursively through subagents unless explicitly requested.
-- For review tasks, explicitly route to the `reviewer` role.
-- For non-review work, explicitly route to the `worker` role unless task is reconnaissance, then route to `scout`.
-- If a subagent needs help, resume and steer it using normal management flow.
+- The primary never delegates recursively unless explicitly requested.
+- For review tasks, explicitly route to `reviewer`.
+- For non-review work, explicitly route to `worker` unless the task is reconnaissance.
+- Use simple-task defaults before additional workers.

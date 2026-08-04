@@ -5,92 +5,76 @@ description: Defines CQRS Datastar interactions. Use for commands, queries, muta
 
 # Datastar CQRS
 
-Commands change state. Queries and streams render current state.
+Commands mutate. Queries render. SSE pushes current read model.
 
-## Page flow
+## Flow
+1. Render initial page and current state.
+2. Detect Datastar with `Datastar-Request`.
+3. Serve same-route fragments and refreshes.
+4. Start SSE from `data-init` on the page root.
+5. Use `Accept: text/event-stream` + `Datastar-Request` first.
+6. Add `/updates` only when a separate stream route is required.
+7. Command routes mutate state, emit events, and return `204` by default.
+8. Stream handlers patch full current read model, not deltas.
 
-1. Render the initial page and current state.
-2. Use same-route Datastar requests for route fragments and refreshes.
-3. Start one SSE stream from `data-init` on the page root.
-4. Use `Accept: text/event-stream` and `Datastar-Request` on the product route by default.
-5. Use `/updates` only when the product route needs a different stream route.
-6. Change state in command routes and emit an internal event.
-7. Return `204 No Content` from commands by default.
-8. Patch the current read model from the update stream.
-9. Store per-user or per-tab UI state in a server-readable cookie when it must continue between requests.
-
-Do not store canonical state in `localStorage` or client signals.
+Do not keep canonical state in `localStorage` or signals.
 
 ## Commands
+- `POST`: create/submit.
+- `PATCH`: partial update or action.
+- `PUT`: replace settings.
+- `DELETE`: remove/reset.
+- Decode inputs with `datastar.ReadSignals(r, &input)`.
+- Validate on server and apply required locks or tx.
+- Emit event only after successful mutation.
+- Use one-shot patches only when immediate feedback is required.
 
-- Use `POST` to create or submit.
-- Use `PATCH` to change part of a resource or do an action.
-- Use `PUT` to replace or select settings.
-- Use `DELETE` to delete or reset.
-- Decode typed signals with `datastar.ReadSignals(r, &input)`.
-- Validate all input on the server.
-- Use the applicable lock or transaction.
-- Emit an event only after a change has no error.
-- Patch immediately only for an intentional one-shot action.
-
-## Update stream
-
-Use content negotiation on the same route:
+## Stream handler
+Use content negotiation before branching.
 
 ```go
 if r.Header.Get("Datastar-Request") != "" &&
-    strings.Contains(r.Header.Get("Accept"), "text/event-stream") {
-    sse := datastar.NewSSE(w, r, datastar.WithCompression())
-    // Patch state, subscribe, and wait for context cancellation.
-    return
+	strings.Contains(r.Header.Get("Accept"), "text/event-stream") {
+	sse := datastar.NewSSE(w, r, datastar.WithCompression())
+	// patch state, subscribe, wait for cancel
+	return
 }
 ```
 
 For each stream:
-
 1. Create one compressed SSE writer.
-2. Patch current state immediately for safe reconnection.
+2. Patch current state immediately for reconnect safety.
 3. Subscribe with `r.Context()` and defer unsubscribe.
-4. Load the current read model after each event.
+4. Reload read model after every event.
 5. Patch with `sse.PatchElementTempl(featureApp(model))`.
-6. Stop when `r.Context().Done()` closes.
+6. Return when context cancels.
 
 ## Event bus
-
-Use the typed pattern in `~/repos/datastar-dev/site/shared/eventbus.go`:
-
-- Create local fanout with `NewEventBusAsync[T]()`.
-- Subscribe with `Subscribe(ctx, fn)` and defer the returned unsubscribe function.
+- Use typed `NewEventBusAsync[T]()` from `site/shared/eventbus.go`.
+- Subscribe via `Subscribe(ctx, fn)` and defer unsubscribe.
 - Emit from commands with `Emit(r.Context(), event)`.
-- Keep payloads small. Load current state. Do not trust event deltas.
-- Debounce fast event groups to prevent too many browser patches.
-- Use `DebounceWithMaxWait` for frequent counters and statistics.
+- Keep event payload small and avoid trusting deltas.
+- Debounce high-rate events.
+- Use `DebounceWithMaxWait` for counters/stats.
 
 ```go
 patch := toolbelt.DebounceWithMaxWait(
-    100*time.Millisecond,
-    time.Second,
-    func(ctx context.Context) error {
-        return sse.PatchElementTempl(featureStats(loadStats(ctx)))
-    },
+	100*time.Millisecond,
+	time.Second,
+	func(ctx context.Context) error {
+		return sse.PatchElementTempl(featureStats(loadStats(ctx)))
+	},
 )
-
-unsub := events.Subscribe(r.Context(), func(struct{}) error {
-    return patch(r.Context())
-})
+unsub := events.Subscribe(r.Context(), func(struct{}) error { return patch(r.Context()) })
 defer unsub()
 ```
 
-## Do not use
-
-- Small command-response deltas as the primary update path.
-- Client-owned canonical state.
-- Append-only streams for important state.
-- Long inline Datastar expressions for business logic.
-- Stale event payloads as the read model.
+## Do not
+- Use inline Datastar deltas as canonical update path.
+- Use append-only streams for critical state.
+- Trust stale event payloads.
+- Place business logic in long client expressions.
 
 ## Verification
-
-Use different tests for command validation, state changes, and rendering.
-
-Make sure the stream patches current state before it waits for new events.
+- Test command validation, state changes, and rendering separately.
+- Ensure each stream patches current state before waiting for events.

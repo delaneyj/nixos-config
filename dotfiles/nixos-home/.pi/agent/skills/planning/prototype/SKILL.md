@@ -1,27 +1,26 @@
 ---
 name: prototype
-description: Builds a throwaway artifact to answer one design question. Use when a decision requires runnable logic or visible UI evidence, or Wayfinder creates a prototype ticket.
+description: Builds a throwaway artifact to answer one design question. Use when a decision needs runnable logic, visible UI evidence, or Wayfinder creates a prototype ticket.
 license: MIT. See ../../references/mattpocock-skills/LICENSE
 ---
 
 # Prototype
 
-A prototype answers one question with throwaway code.
+Use for one decision that needs evidence.
 
 Select one branch:
 
-- Business logic, state transitions, or data shape: read [LOGIC.md](LOGIC.md).
-- Visual structure or interaction design: read [UI.md](UI.md).
+- Data flow, state, transitions: read [LOGIC.md](LOGIC.md).
+- Visual or interaction: read [UI.md](UI.md).
 
 ## Shared rules
 
-1. State the question before you change code.
-2. Put the prototype near the applicable code. Mark it `prototype`.
+1. State the question before coding.
+2. Put the prototype near the relevant code. Mark it `prototype`.
 3. Give one command or URL to run it.
 4. Keep state in memory unless persistence is the question.
-5. Show applicable state data after each action or variant change.
+5. Show applicable state after each action.
 6. Skip production polish and abstractions.
-7. Record the answer when the user makes a decision.
-8. Leave capture, branch, and commit actions for explicit user authorization.
-
-The validated decision can enter production work. Prototype code cannot enter production work.
+7. Capture the answer when user decides.
+8. Leave capture, branch, and commit actions to explicit user authorization.
+9. Prototype code cannot be promoted to production. Keep it throwaway.

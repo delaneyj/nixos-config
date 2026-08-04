@@ -5,118 +5,91 @@ description: Creates and organizes Datastar and templ Go sites. Use for apps, la
 
 # Datastar Bootstrap
 
-Use Datastar as the default web stack.
+Use Datastar + templ as the default stack.
 
 ## Source data
-
-Examine these official `~/repos/datastar-dev` files before setup:
-
-- `site/shared/shared.templ`: Contains the base layout, scripts, inspector, and hot reload.
-- `site/shared/shared.go`: Contains `RenderPage` and shared helpers.
-- `site/web/web.go`: Contains routes, static files, and `/hotreload`.
-- `site/examples/examples.templ`: Contains route registration and page wrappers.
-- `site/examples/*.templ` and `*.go`: Show feature patterns.
-- `site/shared/eventbus.go`: Contains the typed event bus.
-
-Use repository names and style.
+- Read before changes: `~/repos/datastar-dev/site/shared/shared.templ`, `site/shared/shared.go`, `site/web/web.go`, `site/examples/examples.templ`, `site/examples/*.templ`, `site/examples/*.go`, `site/shared/eventbus.go`.
+- Match repository names, package names, and style.
 
 ## Base layout
-
-Create one shared base component in `shared.templ`:
-
-- Add `<!DOCTYPE html>` and `<html lang="en">`.
-- Add a title, description, charset, viewport, and canonical URL when applicable.
-- Put CSS links before the Datastar script.
-- Load the Datastar script or import map one time in `<head>`.
-- Add the Datastar inspector only during development.
-- Put the app shell around `{ children... }`.
-- Use the `datastar-templ` color-mode pattern for StellarUI shells.
-
-Keep one `RenderPage` helper in `shared.go`:
+- Keep one shared base in `shared.templ`.
+- Add `<!DOCTYPE html>`, `<html lang="en">`, title, description, charset, viewport, and canonical when available.
+- Put CSS links before Datastar script/import map.
+- Load Datastar only once in `<head>`.
+- Add Datastar inspector only for development.
+- Wrap app shell around `{ children... }`.
+- Use the datastar-templ color-mode pattern in StellarUI shells.
+- Keep one `RenderPage` helper in `shared.go`:
 
 ```go
 func RenderPage(c templ.Component, w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/html")
-    c.Render(r.Context(), w)
+	w.Header().Set("Content-Type", "text/html")
+	c.Render(r.Context(), w)
 }
 ```
 
-## Routes
-
-Keep route trees explicit:
-
-- Put each important route tree in `routes_<feature>.go`.
-- Call `setupFeatureRoutes(parent chi.Router, deps...)` from the central router.
-- Use `parent.Route("/feature", func(featureRouter chi.Router) { ... })`.
-- Give dynamic resources a nested `Route`:
+## Route structure
+- Create `routes_<feature>.go` files with explicit trees.
+- Central router calls `setupFeatureRoutes(parent chi.Router, deps...)`.
+- Register routes with `parent.Route("/feature", ... )`.
+- Use nested route blocks for dynamic IDs.
 
 ```go
 featureRouter.Route("/{featureID}", func(item chi.Router) {
-    item.Get("/", handleGet)
-    item.Patch("/", handlePatch)
-    item.Delete("/", handleDelete)
+	item.Get("/", handleGet)
+	item.Patch("/", handlePatch)
+	item.Delete("/", handleDelete)
 })
 ```
 
-- Use this structure for nested dynamic routes.
-- Register terminal chi wildcards, such as `/*`, directly when necessary.
-- Render the initial `GET /` with `RenderPage`.
-- Use same-route SSE with `Accept: text/event-stream` and `Datastar-Request` by default.
-- Add `/updates` only when the product route needs a stream on a different route.
-- Mutation routes change state, emit an event, and usually return `204`.
-- Register product routes in browser navigation. Do not use `/ui/*` as the primary entry.
+- Render initial GET via `RenderPage`.
+- Use same-route SSE on the same route using `Accept: text/event-stream` and `Datastar-Request`.
+- Add `/updates` only when stream must be on a separate route.
+- Mutation routes should mutate state, emit events, and usually return `204`.
+- Use terminal chi wildcards (`/*`) only when required.
+- Register product routes for browser navigation; avoid primary `/ui/*` entry.
 
-## Components
-
-- Keep shared shell components in `shared.templ`.
-- Keep route components next to the route setup.
-- Use `feature(...)` for the page wrapper.
-- Use `featureApp(...)` for the coarse morph target.
-- Add more components only for reuse or clarity.
-- Put `data-init` and a stable ID on the coarse morph target.
+## Components and ownership
+- Keep shared shell in `shared.templ`.
+- Keep route components next to route setup.
+- Use `feature(...)` for page wrapper.
+- Use `featureApp(...)` as coarse morph target.
+- Add components only for clarity or reuse.
+- Set `data-init` and stable IDs on coarse morph targets.
 - Use typed page models and signal structs.
 
-## Static files
-
-- Use `github.com/benbjohnson/hashfs` with an embedded file system.
+## Static assets and cache
+- Use embedded `github.com/benbjohnson/hashfs`.
 - Use `hashfs.NewFS`, `StaticPath(...)`, and `hashfs.FileServer(...)`.
-- Add long immutable cache headers for hashed files.
-- Load Datastar and app CSS from the base layout.
-- Use project files. Do not add new CDN dependencies.
+- Set long immutable cache headers for hashed assets.
+- Load Datastar and app CSS from base layout.
+- Avoid adding new CDN dependencies.
 
-## Hot reload
-
-Copy the pattern from `site/shared/shared.templ` and `site/web/web.go`.
+## Hot reload pattern
+- Copy from `site/shared/shared.templ` and `site/web/web.go`.
 
 ```templ
-<div id="hotreload" data-init="@get('/hotreload', {retryMaxCount: 1000,retryInterval:20,retryMaxWait:200})"></div>
+<div id="hotreload" data-init="@get('/hotreload', {retryMaxCount: 1000, retryInterval: 20, retryMaxWait: 200})"></div>
 ```
 
 ```go
 var hotReloadOnlyOnce sync.Once
 router.Get("/hotreload", func(w http.ResponseWriter, r *http.Request) {
-    sse := datastar.NewSSE(w, r)
-    hotReloadOnlyOnce.Do(func() {
-        sse.ExecuteScript("window.location.reload()")
-    })
-    <-r.Context().Done()
+	sse := datastar.NewSSE(w, r)
+	hotReloadOnlyOnce.Do(func() { sse.ExecuteScript("window.location.reload()") })
+	<-r.Context().Done()
 })
 ```
 
-- Register `/hotreload` only for development or trusted local access.
-- Keep `id="hotreload"` for test and observer filters.
-- Do not use hot reload to synchronize app state.
-
-## Defaults
-
-- The server owns state and renders HTML.
-- Datastar attributes define interactions.
-- CQRS uses mutation routes, event bus messages, and an update stream.
-- Use coarse morph targets and semantic CSS.
+- Register `/hotreload` only in development or trusted local access.
+- Keep `id="hotreload"` for filtering.
+- Do not use hot reload to sync app state.
 
 ## Verification
-
-Use the repository task runner when it is available. If it is not available, run:
+- Server owns HTML state and Datastar drives interactions.
+- Use CQRS for commands, event bus, and update streams.
+- Prefer semantic coarse morph targets and tokenized CSS.
+- Run if available:
 
 ```bash
 templ generate

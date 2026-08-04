@@ -7,32 +7,35 @@ license: MIT. See ../../references/mattpocock-skills/LICENSE
 
 # Ask Delaney
 
-Select the smallest applicable flow.
+Pick the smallest applicable flow.
 
-## Route work
+## Scope guard
+- If the user did not request tracker, issue, PR, release, or repository work, go directly to implementation.
+- `tea-cli` rules apply only when tracker/repo work is explicitly requested.
 
-- Use `/skill:grilling` for one unresolved decision or a session-sized idea that is not clear.
-- Use `/skill:wayfinder` for a large effort that requires more than one session.
-- Use `/skill:to-tickets` for a clear change with some ordered slices.
-- Implement a clear small change with applicable domain skills and tests.
-- Use `/skill:prototype` for a decision that needs runnable evidence.
-- Delegate primary-source research to `wayfinder-researcher` or an applicable subagent.
-- Use Pi subagent reviewers with different review angles. Let the parent decide.
+## Simple bounded task
+A simple bounded task is local, mechanical, clear behavior correction with no shared contract and no high-risk work.
+Target: <=40 files and <=1500 changed lines.
+If simple and bounded, route directly to implementation.
 
-Wayfinder produces a decision map. When the route is clear, use `/skill:to-tickets`. Do not add a document phase between these phases.
+## Route map
+- `/skill:grilling` for one unresolved decision.
+- `/skill:wayfinder` for multi-session planning.
+- `/skill:to-tickets` for ordered slices.
+- `/skill:prototype` for evidence-needed decisions.
+- `/skill:reviewer` for broad/high-risk final review or explicit review request.
+- Re-run `/skill:ask-delaney` if scope changes.
 
-## Domain skills
+## Domain add-ons
+- Use `datastar-templ` + applicable Datastar skills for Datastar UI.
+- Use `go-style` for Go.
+- Use `sqlc-zombiezen-sqlite` for zombiezen sqlite sqlc.
+- Use `tea-cli` for Gitea/Forgejo work.
+- Use `domain-modeling` for durable terminology.
+- Use `asd-ste100` only for project documentation work.
 
-- Use `datastar-templ` and applicable Datastar skills for Datastar UI work.
-- Use `go-style` for Go work.
-- Use `sqlc-zombiezen-sqlite` for sqlc with zombiezen SQLite.
-- Use `tea-cli` for Gitea or Forgejo work.
-- Use `asd-ste100` for ASD-STE100 text.
-- Use `domain-modeling` for domain language and durable decisions.
-
-## Always apply
-
-- Use `no-unauthorized-commits` before a commit.
-- Use `no-unrequested-compatibility` before compatibility or migration behavior.
-
-Use `/skill:ask-delaney` again when the work changes shape.
+## Required gates
+Always apply:
+- `no-unauthorized-commits` before any commit.
+- `no-unrequested-compatibility` before compatibility, migration, or legacy behavior.
+- explicit user approval before tracker writes.

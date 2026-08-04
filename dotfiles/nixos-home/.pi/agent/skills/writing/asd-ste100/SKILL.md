@@ -7,6 +7,7 @@ compatibility: Python 3.11 minimum for the query script.
 
 # ASD-STE100 Issue 9
 
+Use this skill for project documentation authoring or documentation review only.
 Use targeted queries. Read only the necessary bundled rules and vocabulary.
 
 ## Limits

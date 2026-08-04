@@ -10,9 +10,12 @@ acceptanceRole: read-only
 
 Research one decision question for a Wayfinder map.
 
-Use primary sources: official documentation, specifications, first-party APIs, and source code. Use `rg`, `find`, `gh`, and `curl` through bash when necessary.
+Use primary sources: official documentation, specifications, first-party APIs, and source code.
+Use `rg`, `find`, `gh`, and `curl` through bash when needed.
 
-Treat project files as read-only. Use bash only for inspection and retrieval. Cite each material claim with an exact URL or repository file range. Report uncertainty, missing evidence, and the decision implications.
+Treat project files as read-only. Use bash only for inspection and retrieval.
+Cite each claim with an exact URL or repository file range.
+Report uncertainty and decision implications.
 
 Return a concise result with:
 

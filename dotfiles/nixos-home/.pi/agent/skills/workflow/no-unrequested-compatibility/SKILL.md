@@ -3,45 +3,38 @@ name: no-unrequested-compatibility
 description: Blocks compatibility, migration, and legacy behavior unless the user explicitly requests it in the current task.
 ---
 
-# No Unrequested Compatibility
+# No unrequested compatibility
 
 ## Gate
+Before adding compatibility, migration, or legacy behavior, all must be yes:
 
-Before you add compatibility behavior, make sure that all answers are yes:
+1. User explicitly requested this behavior.
+2. The old interface/format/behavior/data is explicitly named.
+3. Scope is limited to that request.
 
-1. Did the user explicitly request compatibility in the current task?
-2. Did the user identify the old interface, format, behavior, or data that must continue to work?
-3. Is the compatibility scope no larger than the explicit request?
+If any answer is no, do not add compatibility behavior.
 
-If an answer is no or not clear, do not add compatibility behavior.
+## Hard ban
+Do not add without explicit authorization:
+- legacy readers or decoders
+- adapters/translation layers
+- fallback paths
+- dual reads or dual writes
+- version bridges
+- deprecated aliases
+- silent upgrades
+- compatibility tests or fixtures
+- migrations and compatibility flags
 
-## Hard Ban Without Authorization
+Do not infer approval from tests, backups, releases, version numbers, or common practice.
 
-Do not add these items without explicit authorization:
+## Replacement requests
+When user requests replacement:
+- remove old representation, tests, docs, and storage path in the same change.
+- if removal could destroy data, ask one direct question first.
+- do not add migration or compatibility as a precaution.
 
-- Do not add legacy readers or decoders.
-- Do not add adapters or translation layers.
-- Do not add fallback behavior.
-- Do not add dual reads or dual writes.
-- Do not add data migrations.
-- Do not keep previous formats.
-- Do not add version bridges.
-- Do not add deprecated aliases.
-- Do not add silent upgrades.
-- Do not add compatibility tests or fixtures.
-
-Do not infer authorization from existing data, tests, releases, version numbers, backup formats, or common engineering practice.
-
-## Replacement Rule
-
-When the user requests a replacement, remove the replaced representation, tests, documentation, and storage path in the same change.
-
-If removal can destroy user data, stop and ask one direct question. Do not add a migration or compatibility layer as a precaution.
-
-## Review
-
-Before you report completion:
-
-1. Search the diff for `compat`, `legacy`, `fallback`, `migration`, `deprecated`, `old`, `v1`, and dual-path logic.
-2. Remove each unrequested compatibility path.
-3. Report each destructive data effect clearly.
+## Final review
+Before completion, search the diff for:
+`compat`, `legacy`, `migration`, `fallback`, `deprecated`, `old`, `v1`, `dual path`, `dual-path`.
+Remove any unrequested paths. State any destructive data impact clearly.
