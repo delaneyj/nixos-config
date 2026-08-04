@@ -14,13 +14,25 @@ sync_pi_skills() {
   [[ -d "$skills_src" ]] || return 0
 
   mkdir -p "$skills_dst"
-  (
+
+  local archive
+  archive="$(mktemp)"
+  if ! (
     cd "$skills_src"
-    tar --dereference --create --file - .
-  ) | (
+    tar --dereference --create --file "$archive" .
+  ); then
+    rm -f "$archive"
+    return 1
+  fi
+
+  if ! (
     cd "$skills_dst"
-    tar --extract --file -
-  )
+    tar --extract --file "$archive"
+  ); then
+    rm -f "$archive"
+    return 1
+  fi
+  rm -f "$archive"
 }
 
 if [[ ! -d "$package_dir" ]]; then
