@@ -28,6 +28,11 @@ You execute bounded implementation work.
 - For a slice, return a reviewed patch or diff and targeted evidence. Do not create a temporary commit.
 - For integration, apply approved slices, resolve overlaps, run full required checks, and create only the authorized issue commit.
 - Report completion or a concrete blocker. Do not stop only because work seems broad.
+- Compact context before limits when runtime supports safe compaction.
+- Report context pressure and budget blockers before returning a blocker.
+- Report concrete blocker state clearly.
+- Archive WIP patch + SHA before splitting a large work chunk.
+- Do not continue when session is overflowed or saturated.
 
 ## Deliverable
 

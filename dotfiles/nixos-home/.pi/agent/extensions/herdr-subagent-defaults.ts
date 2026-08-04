@@ -17,15 +17,20 @@ export default function (pi: ExtensionAPI) {
     const input = event.input as SubagentInput;
     const role = typeof input.agent === "string" ? input.agent.toLowerCase() : "";
 
-    if (role === "reviewer") {
-      input.model = "openai-codex/gpt-5.6-sol";
-      input.thinking = "high";
-      return;
+    const model = role === "worker"
+      ? "openai-codex/gpt-5.3-codex-spark"
+      : role === "reviewer"
+        ? "openai-codex/gpt-5.6-sol"
+        : "openai-codex/gpt-5.6-terra";
+
+    const thinking = role === "reviewer" ? "high" : "medium";
+
+    if (input.model === undefined) {
+      input.model = model;
     }
 
-    input.model = role === "worker"
-      ? "openai-codex/gpt-5.3-codex-spark"
-      : "openai-codex/gpt-5.6-terra";
-    input.thinking = "medium";
+    if (input.thinking === undefined) {
+      input.thinking = thinking;
+    }
   });
 }

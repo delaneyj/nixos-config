@@ -69,13 +69,26 @@ This is a manager session.
 - For review tasks, explicitly route to `reviewer`.
 - For non-review work, explicitly route to `worker` unless the task is reconnaissance.
 - Use simple-task defaults before additional workers.
+- For follow-up delegation, replace unconditional resume behavior with bounded continuation checks.
+  - Resume only if safe continuation budget is known and bounded.
+  - Never resume after length overflow, context overflow, auto-retry exhaustion, or unknown budget.
+  - Use a fresh `worker` in the same worktree for broad or context-heavy corrections.
+  - Resume only after completion.
+  - Carry full transfer of task text, status, commit SHA, patch path, validation, and acceptance context.
+  - Compact before approaching limits when runtime supports safe compaction.
+  - Use authenticated 272K context with model `openai-codex/gpt-5.6-terra` for broad revisions.
+  - Archive WIP patch and SHA before large splits.
+  - Do not repeatedly retry a saturated session.
 
 ### Subagent Steering Policy
 
 - Never interrupt or terminate an active subagent only because a requirement changes.
 - Let active subagents finish unless the user explicitly says `kill`, `stop`, `cancel`, or `interrupt` for that worker.
-- To send correction/follow-up work, use `subagent_resume` with the returned session path after completion.
+- Send correction/follow-up work only when bounded continuation is safe.
+- Use `subagent_resume` only after completion and only with known safe budget.
+- If continuation is unsafe, split work and start a fresh `worker` in the same worktree.
 - Do not start another writer in the same worktree while the first writer remains active.
 - Independent workers in other worktrees may continue.
-- If active work becomes obsolete, unsafe, or expected to fail, wait for completion and apply follow-up via `subagent_resume` unless the user authorizes termination.
+- If active work becomes obsolete, unsafe, or expected to fail, wait for completion.
+- If continuation is needed after completion, send full context or start fresh work as required.
 - Report queued follow-up work when useful. Keep the primary responsive.
