@@ -31,7 +31,8 @@ tea login add
 - Use noninteractive flags when possible.
 
 ## Safety gates
-Get current-turn approval before any write action:
+Get current-turn approval before any write action, unless issue-work authorization is already active:
+- For a direct request to work on a specific open tracker issue, issue-branch creation, one issue commit, one push, and first WIP PR creation are covered by issue-work authorization.
 - create/edit/close/merge an issue, PR, release, label, milestone, webhook, or repository
 - PR merge/close
 - delete release or repository
@@ -92,7 +93,10 @@ git log --oneline --decorate main..HEAD
 git push -u origin HEAD
 ```
 
-Create PR only with explicit approval.
+Create PR automatically after the first coherent verified commit for issue-work flows.
+For explicit PR-only requests, keep explicit approval. Use exactly one `WIP: ` prefix.
+
+If there is no base commit or no-diff PR creation is rejected, stop and request base-initialization authorization.
 
 ## WIP title and reviewer
 Agent PRs need one `WIP: ` prefix:

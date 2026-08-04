@@ -38,4 +38,5 @@ If simple and bounded, route directly to implementation.
 Always apply:
 - `no-unauthorized-commits` before any commit.
 - `no-unrequested-compatibility` before compatibility, migration, or legacy behavior.
-- explicit user approval before tracker writes.
+- A direct request to work on a specific open tracker issue can authorize the issue-work cycle once.
+- Any other tracker/repository write still needs explicit approval.

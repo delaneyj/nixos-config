@@ -6,6 +6,25 @@ description: Controls commit authorization. Use before git commit and after comm
 # Commit authorization
 
 No commit without one explicit authorization mode.
+Issue-work and non-issue tasks use separate authorization checks.
+
+## Issue-work authorization
+A direct request to work on a specific open tracker issue authorizes one implementation pass that includes:
+
+1. Reading issue + comments first.
+2. Verifying issue state is `open`.
+3. Issue-number branch creation.
+4. Exactly one coherent verified implementation commit.
+5. Exactly one push of that commit.
+6. Automatic WIP PR creation after that commit with exactly one `WIP: ` prefix.
+
+A request such as `continue`, `next`, or `finish` does not authorize issue-work.
+
+If the repo has no base commit or the tracker rejects a no-diff PR, stop and ask for minimum base-initialization authorization.
+
+Do not create an empty/bootstrap commit just to open a PR.
+
+After this set, any later issue-related action (additional commits, pushes, PR revisions, metadata edits, ready-state changes, merges, or closes) requires explicit authorization under existing rules.
 
 ## Direct commit authorization
 A request for exactly one direct commit must satisfy:
@@ -18,10 +37,10 @@ A request for exactly one direct commit must satisfy:
 If any check fails, do not commit. Report uncommitted work.
 
 ## Pull-request publication authorization
-A request to create, open, or publish a PR authorizes the issue commits needed for that PR, including same-turn implementation changes.
+A request to create, open, or publish a PR does not by itself authorize issue-work branch creation, implementation commits, or push.
 
-- Keep draft PR rules where supported.
-- Treat PR draft state and `WIP: ` title separately.
+Keep draft PR rules where supported.
+Treat PR draft state and `WIP: ` title separately.
 
 ## WIP title rule
 During agent PR work:
@@ -45,6 +64,7 @@ Pull-request publication authorization does not permit:
 Use the primary repository for confirmation. Keep other draft branches in isolated worktrees until selected.
 
 ## One-commit limits
+Issue-work allows exactly one implementation commit per requested issue branch.
 For multiple tracked issues, authorize at most one integration commit per requested issue branch.
 During any one commit request, authorize at most one commit.
 
