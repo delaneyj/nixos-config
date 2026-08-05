@@ -18,8 +18,10 @@ Apply these rules to all Go changes.
 - Do not keep all-caps acronyms in domain names.
 
 ## Domain methods
-- Put logic on concrete owners.
-- Avoid adapters when method can be on owned type.
+- Put reusable logic on concrete owners.
+- Do not create an unexported method for one production call site.
+- Receiver ownership does not override the single-use private logic rule.
+- Avoid adapters when a reused method can be on an owned type.
 - Use wrappers only for primitives, external types, boundaries, or explicit public API needs.
 
 ## Serialization
@@ -89,10 +91,52 @@ var (
 
 - Use explicit conversion for sentinel values.
 
+## Single-use private logic
+
+Inline every private function-like declaration that has exactly one production call site.
+
+This rule includes:
+- unexported package functions,
+- unexported methods,
+- named local functions,
+- local function variables and closures that are invoked once.
+
+Count production call sites, not declaration references. Tests do not count as production use.
+
+Do not keep single-use private logic for:
+- receiver ownership,
+- file organization,
+- readability,
+- function length,
+- type-specific parsing or encoding,
+- possible future reuse.
+
+For example, if only one branch calls `value.setUTC(raw)`, inline the `setUTC` body into that branch.
+
+Inline a one-use closure directly into the API call that receives it. Do not assign it to a local variable first.
+
+Exceptions are limited to:
+- recursion,
+- language-required functions such as `main` and `init`,
+- methods required by an interface,
+- framework-required declarations,
+- generated code.
+
+An exception must be structurally required. A conceptual boundary alone is not an exception.
+
 ## Package-level declarations
-- Never add one-use package-level function/var/const/type with production use.
-- Exceptions: interfaces, API boundaries, routes, recursion, generics, or two+ production call sites.
-- Before finish: list new package-level declarations, then remove one-use ones.
+- Never add a private package-level variable, constant, or type with one production use.
+- Export does not justify a declaration that has only one internal production use unless it is an explicit API boundary.
+- Tests do not count as production use.
+
+## Required single-use audit
+
+Before completion:
+1. List every private function and method added or changed.
+2. Count its non-test production call sites.
+3. Inline each declaration with exactly one call site.
+4. Repeat the search after inlining.
+5. Report any remaining exception and its structural requirement.
 
 ## Context
 - `context.Background()` is allowed only inside a production `main` function that creates the process root context.

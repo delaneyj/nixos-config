@@ -3,9 +3,6 @@
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "medium",
-  "packages": [
-    "./packages/pi-herdr-subagents"
-  ],
   "hideThinkingBlock": false,
   "theme": "dark"
 }
