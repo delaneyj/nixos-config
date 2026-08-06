@@ -31,12 +31,11 @@ tea login add
 - Use noninteractive flags when possible.
 
 ## Safety gates
-Get current-turn approval before any write action, unless issue-work authorization is already active:
-- For a direct request to work on a specific open tracker issue, issue-branch creation, one issue commit, one push, and first WIP PR creation are covered by issue-work authorization.
-- create/edit/close/merge an issue, PR, release, label, milestone, webhook, or repository
-- PR merge/close
-- delete release or repository
-- admin actions
+Get current-turn approval before any write action, unless issue-work or PR-work authorization is active:
+- A direct request to work, continue, or finish a specific open issue or PR starts an active progress session.
+- The session covers logical commits, normal pushes, PR progress text, and WIP title lifecycle.
+- It does not cover merge, close, delete, force-push, draft-state changes, releases, webhooks, or admin actions.
+- Get explicit current-turn approval for excluded actions.
 
 Use JSON output for inspection and audit.
 
@@ -93,8 +92,11 @@ git log --oneline --decorate main..HEAD
 git push -u origin HEAD
 ```
 
-Create WIP PR immediately for issue-work with one `WIP: ` prefix.
-Use a body with planned behavior and `Tests: pending`.
+Create a WIP PR immediately after issue branch creation.
+Use one `WIP: ` prefix.
+Convert the issue scope into an unchecked PR task checklist before implementation.
+Use `Tests: pending` until validation gives exact commands.
+Use the PR checklist as the progress record while WIP is present.
 Try no-diff PR creation first when supported by the tracker.
 For issue-work only, if the tracker rejects no-diff PRs, create one empty commit named `chore: start issue N` and push it to open the PR.
 For explicit PR-only requests, keep explicit approval.
@@ -102,21 +104,34 @@ For explicit PR-only requests, keep explicit approval.
 If there is no base commit, stop and request base-initialization authorization.
 
 ## WIP title and reviewer
-Agent PRs need one `WIP: ` prefix:
+`WIP: ` means that the agent is still making progress.
+Keep commits logically small and bounded while this prefix is present.
+Prefer one checklist task or one tightly coupled task slice per commit.
+Push each completed logical commit.
+Update the PR checklist after each push.
 
 ```bash
 tea pr create --base main --head <branch> --title "WIP: <title>" --description "..."
 ```
 
 Before PR revision:
-- read title via `tea pr <number> --output json`.
-- if missing prefix, run one non-duplicated edit:
+- Read the title with `tea pr <number> --output json`.
+- Add one non-duplicated prefix when active agent work lacks it.
 
 ```bash
 tea pr edit <number> --title "WIP: <title>"
 ```
 
-Remove the prefix only after implementation, required checks, required user-experienced-layer verification for user-visible work, and independent review are complete.
+At handoff:
+1. Complete implementation and required checks.
+2. Complete user-layer verification when required.
+3. Complete independent review and corrections.
+4. Push all logical commits.
+5. Update the PR body and checklist.
+6. Remove only the leading `WIP: ` without waiting for another request.
+7. Read the PR back and report that it is ready for human review.
+
+Do not change the separate PR draft state without explicit authorization.
 
 Assign the issue creator as reviewer:
 
@@ -128,14 +143,20 @@ tea pr edit <pr-number> --add-reviewers <issue-creator>
 If reviewer assignment fails, report the failure.
 
 ## PR body format
-Use short title and ordered body:
+Use a short title and ordered body:
 
-- `Why:` root cause, user effect, fix rationale.
+- `Why:` root cause, user effect, and fix rationale.
 - `What changed:` result themes.
-- `Tests:` commands.
-- include `Closes #<number>` when applicable.
-- For issue-work bootstraps, use `Tests: pending` until implementation finishes.
-- Update `Tests:` to exact commands after implementation.
+- `Progress:` an issue-derived Markdown task checklist.
+- `Tests:` exact commands.
+- Include `Closes #<number>` when applicable.
+- Start every planned task unchecked before implementation.
+- Check a task only after its verified commit is in the remote PR.
+- After each push, update tasks completed by that commit.
+- Add newly discovered work as unchecked tasks before starting it.
+- Keep unfinished and blocked work unchecked.
+- Use `Tests: pending` until implementation validation finishes.
+- Replace `Tests: pending` with exact commands after validation.
 
 Use a temp file for multiline description.
 

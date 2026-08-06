@@ -9,28 +9,28 @@ No commit without one explicit authorization mode.
 Issue-work and non-issue tasks use separate authorization checks.
 
 ## Issue-work authorization
-A direct request to work on a specific open tracker issue authorizes one implementation pass that includes:
+A direct request to work on a specific open tracker issue or PR authorizes one active progress session that includes:
 
-1. Reading issue + comments first.
-2. Verifying issue state is `open`.
-3. Issue-number branch creation.
-4. One branch push.
-5. Immediate PR opening for that issue branch with:
-   - one `WIP: ` prefix only,
-   - planned behavior in the body,
-   - `Tests: pending` until results are known.
-6. Try a no-diff PR first when the tracker supports it.
-7. If a no-diff PR is rejected, create exactly one empty bootstrap commit named `chore: start issue N` and push it to open the WIP PR.
-8. Keep exactly one leading `WIP: ` through implementation, validation, correction, and required independent review.
-9. Exactly one coherent verified implementation commit.
-10. Exactly one normal push of that implementation commit.
-11. Update PR body with exact `Tests:` commands from implementation.
+1. Read the issue or PR and comments first.
+2. Verify that the issue or PR is open.
+3. Create or switch to the issue branch when needed.
+4. Open a PR with one `WIP: ` prefix when no PR exists.
+5. Put the issue work plan in the PR as an unchecked task checklist before implementation.
+6. Keep `Tests: pending` until validation gives exact commands.
+7. Make the smallest coherent commit for each task or tightly coupled task slice.
+8. Push each logical commit so the WIP PR shows current progress.
+9. Update the PR checklist after each pushed commit.
+10. Check only tasks completed and verified by commits already in the PR.
+11. Add newly discovered work as unchecked tasks before implementation.
+12. Keep exactly one leading `WIP: ` through implementation, validation, correction, and independent review.
+13. Remove `WIP: ` immediately before handoff when the change is ready for human review.
+14. Report the human-review-ready PR URL after removing `WIP: `.
 
-A request such as `continue`, `next`, or `finish` does not authorize issue-work.
+A request to `continue`, `next`, or `finish` a specific open issue or PR starts an active progress session.
 
-If the repo has no base commit, stop and ask for separate base-initialization authorization.
+If the repository has no base commit, stop and ask for separate base-initialization authorization.
 
-After this set, any later issue-related action (additional commits, pushes, PR revisions, metadata edits, ready-state changes, merges, or closes) requires explicit authorization under existing rules.
+Merging, closing, deleting, force-pushing, and changing draft state always require explicit current-turn authorization.
 
 ## Direct commit authorization
 A request for exactly one direct commit must satisfy:
@@ -51,12 +51,16 @@ Treat PR draft state and `WIP: ` title separately.
 ## WIP title rule
 During agent PR work:
 
-- PR title must start with `WIP: `.
+- Treat `WIP: ` as the agent progress state.
+- Use multiple logical commits while the title has `WIP: `.
+- Push completed logical commits so the PR shows current progress.
 - Before revision, read title JSON:
   `tea pr <number> --output json`
-- If missing, apply one non-duplicated prefix:
+- If active agent work lacks the prefix, apply one non-duplicated prefix:
   `tea pr edit <number> --title "WIP: <title>"`
-- Remove only the leading `WIP: ` after implementation, required checks, required user-experienced-layer verification for user-visible work, and independent review are complete.
+- Remove only the leading `WIP: ` when implementation, checks, user verification, and independent review are complete.
+- Remove the prefix before reporting that the PR is ready for human review.
+- Do not wait for a separate user request to remove the prefix at handoff.
 
 ## Parallel draft workflow
 Pull-request publication authorization does not permit:
@@ -70,17 +74,21 @@ Pull-request publication authorization does not permit:
 Use the primary repository for confirmation. Keep other draft branches in isolated worktrees until selected.
 - Do not change ready/draft state for WIP lifecycle completion unless explicitly authorized.
 
-## One-commit limits
-Issue-work allows exactly one implementation commit per requested issue branch.
-A bootstrap commit is allowed once when no-diff PR is rejected and only if it is named `chore: start issue N`.
-For multiple tracked issues, authorize at most one integration commit per requested issue branch.
-During any one commit request, authorize at most one commit.
+## Commit boundaries
+During an active issue or PR progress session:
 
-## Compound direct requests
-For `commit and continue` or equivalent:
-1. Make one commit.
-2. Stop direct authorization.
-3. Continue only as uncommitted work.
+- Prefer the smallest coherent commit that completes one checklist task or one tightly coupled task slice.
+- Keep commits logically small and bounded for human review.
+- Do not hold several completed tasks for one large commit.
+- Do not split a required atomic change only to reduce commit size.
+- Keep each commit coherent and verified for its completed scope.
+- Push each completed logical commit to the WIP PR.
+- Update the PR checklist after each pushed commit.
+- Check only work present and verified in the remote PR.
+- Add discovered follow-up work to the checklist before starting it.
+- Do not combine unrelated corrections in one commit.
+
+For direct work without an issue or PR, one explicit commit request authorizes one commit.
 
 ## Completion checks
 If another skill requires a commit without authorization:
@@ -90,6 +98,8 @@ If another skill requires a commit without authorization:
 4. wait for authorization.
 
 ## Required report for commit
-After a direct commit: end with
+After a direct commit outside active issue or PR work, end with:
 `Uncommitted: <short summary>. Say "commit" if you want this committed.`
-After pull-request publication: report each commit and PR, then list all residual uncommitted work.
+
+During active issue or PR work, report logical commits, pushes, checklist changes, and residual tasks.
+At human-review handoff, remove `WIP: ` and report the PR URL.
