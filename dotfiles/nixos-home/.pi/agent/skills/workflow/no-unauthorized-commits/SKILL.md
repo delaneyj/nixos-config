@@ -1,6 +1,6 @@
 ---
 name: no-unauthorized-commits
-description: Controls commit authorization. Use before git commit and after commit, pull-request publication, or parallel tracked-issue requests.
+description: Controls commit and merge authorization. Use before git commit or merge, and after commit, merge, pull-request publication, or parallel tracked-issue requests.
 ---
 
 # Commit authorization
@@ -31,6 +31,20 @@ A request to `continue`, `next`, or `finish` a specific open issue or PR starts 
 If the repository has no base commit, stop and ask for separate base-initialization authorization.
 
 Merging, closing, deleting, force-pushing, and changing draft state always require explicit current-turn authorization.
+
+## Post-merge unblock audit
+After a confirmed merge closes or completes an issue:
+
+1. Identify each issue that the merged work closes or completes.
+2. Find open issues that directly depend on each completed issue.
+3. Check native tracker dependencies and explicit dependency statements in issue bodies.
+4. Read every remaining dependency and verify its current state.
+5. Report each issue that has no open dependency as unblocked.
+6. Report stale `blocked` labels and differences between native links and issue bodies.
+7. Do not treat an empty native dependency list as authoritative when an issue body names an open dependency.
+8. Do not change labels or dependency links without current-turn approval.
+
+Complete this audit before post-merge cleanup ends.
 
 ## Direct commit authorization
 A request for exactly one direct commit must satisfy:
