@@ -34,9 +34,13 @@ Apply these rules to all Go changes.
 - Remove avoidable JSON-to-RON chains.
 
 ## Variadics
-- Use variadic params for homogeneous values when callers do not need a slice.
-- Use slices when ownership, capacity, nil, or allocation matters.
-- Pass slice values with `values...`.
+- Use a variadic parameter when callers supply zero or more same-type values independently.
+- Prefer a variadic parameter when it removes a slice literal from a call.
+- Keep a slice parameter when the slice is one owned collection value.
+- Keep a slice parameter when the function can mutate the collection.
+- Keep a slice parameter when capacity, nil, or allocation behavior is important.
+- Keep a required external interface signature unchanged.
+- Pass a slice to a variadic parameter with `values...`.
 
 For repeated primitive append logic use typed generic helper:
 
