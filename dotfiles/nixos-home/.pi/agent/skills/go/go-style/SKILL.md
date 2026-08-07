@@ -17,6 +17,11 @@ Apply these rules to all Go changes.
 - Use standard Go initialisms.
 - Do not keep all-caps acronyms in domain names.
 
+## Unconstrained values
+- Use `any` for an unconstrained value.
+- Do not use `interface{}` for an unconstrained value.
+- Keep typed interfaces and generic constraints unchanged.
+
 ## Domain methods
 - Put reusable logic on concrete owners.
 - Do not create an unexported method for one production call site.
