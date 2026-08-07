@@ -15,6 +15,14 @@ sync_pi_skills() {
 
   mkdir -p "$skills_dst"
 
+  local link_target source_path
+  while IFS= read -r -d '' source_path; do
+    link_target="$(readlink -m "$source_path")"
+    if [[ "$link_target" == "$skills_dst/"* ]]; then
+      rm -f "$source_path"
+    fi
+  done < <(find -L "$skills_src" -type l -print0)
+
   local archive
   archive="$(mktemp)"
   if ! (
