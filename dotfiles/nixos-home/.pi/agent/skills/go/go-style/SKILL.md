@@ -74,6 +74,20 @@ return appendRawFloat64s(
 )
 ```
 
+## Map creation
+- Use `map[K]V{}` when an empty map has no capacity estimate.
+- Do not use `make(map[K]V)` without a capacity.
+- Use `make(map[K]V, capacity)` only when the code has a good capacity estimate.
+- Add a capacity when the expected size is available at map creation.
+- Use a nonempty composite literal when the map has initial entries.
+- Use a nil map when the code does not write to the map.
+
+```go
+empty := map[string]int{}
+known := map[string]int{"answer": 42}
+indexed := make(map[string]int, len(items))
+```
+
 ## Control flow
 - Add blank line between logical phases.
 - Add blank line after early-return guard.
