@@ -4,5 +4,8 @@
   "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": false,
-  "theme": "dark"
+  "theme": "dark",
+  "packages": [
+    "npm:pi-work-timer@0.1.0"
+  ]
 }

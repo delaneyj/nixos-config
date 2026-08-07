@@ -105,6 +105,9 @@ If there is no base commit, stop and request base-initialization authorization.
 
 ## WIP title and reviewer
 `WIP: ` means that the agent is still making progress.
+A leading `WIP: ` blocks merge in Gitea and Forgejo.
+Remove the prefix before handoff so that the tracker can permit merge.
+Prefix removal does not authorize merge.
 Keep commits logically small and bounded while this prefix is present.
 Prefer one checklist task or one tightly coupled task slice per commit.
 Push each completed logical commit.
