@@ -9,6 +9,8 @@ Use `tea` for explicit Gitea/Forgejo tracker and repository work.
 
 ## Scope guard
 Only run this workflow when the user explicitly requests tracker, issue, PR, release, or repository work.
+Use this workflow only for Gitea and Forgejo projects.
+For GitHub, use GitHub CLI draft PRs with normal titles. Never add a `WIP: ` prefix on GitHub.
 For normal code tasks, skip issue creation, PR work, worktrees, and review ceremonies.
 
 ## Setup and auth
@@ -39,7 +41,27 @@ Get current-turn approval before any write action, unless issue-work or PR-work 
 
 Use JSON output for inspection and audit.
 
+A PR request for uncommitted code on the base branch authorizes the complete publication workflow. Create the issue, issue branch, commit, push, and PR.
+
 Never run `git commit` without `no-unauthorized-commits`.
+
+## Dependency tracking
+Use native Gitea issue dependencies as the blocking authority.
+Do not add or require a `blocked` label.
+IssueHound and Gitea dependency APIs read native links, not labels.
+Treat an issue as blocked only when at least one native dependency is open.
+A closed dependency preserves history but does not block work.
+Use these endpoints to inspect both directions:
+
+```bash
+tea api '/repos/{owner}/{repo}/issues/<number>/dependencies'
+tea api '/repos/{owner}/{repo}/issues/<number>/blocks'
+```
+
+`tea` does not synchronize labels when dependency states change.
+For repository-wide audits, query the Gitea issues API and exclude entries with a non-null `pull_request` field.
+Compare native links with explicit dependency statements in issue bodies.
+Do not infer dependencies from a label.
 
 ## Issue branch gate
 1. Read target issue first:
@@ -76,6 +98,16 @@ git switch -c <number>-<short-label>
 ```
 
 ## PR preflight and publish
+
+When uncommitted code is on the base branch:
+
+1. Inspect the code.
+2. Create the required issue.
+3. Read the issue and verify that it is open.
+4. Create the issue branch without changing the code.
+5. Commit and push the requested code.
+6. Create the PR.
+
 Before PR creation:
 
 ```bash

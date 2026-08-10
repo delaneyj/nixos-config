@@ -14,7 +14,7 @@ A direct request to work on a specific open tracker issue or PR authorizes one a
 1. Read the issue or PR and comments first.
 2. Verify that the issue or PR is open.
 3. Create or switch to the issue branch when needed.
-4. Open a PR with one `WIP: ` prefix when no PR exists.
+4. Open a draft PR when GitHub supports drafts. Use one `WIP: ` prefix on Gitea or Forgejo.
 5. Put the issue work plan in the PR as an unchecked task checklist before implementation.
 6. Keep `Tests: pending` until validation gives exact commands.
 7. Make the smallest coherent commit for each task or tightly coupled task slice.
@@ -22,15 +22,17 @@ A direct request to work on a specific open tracker issue or PR authorizes one a
 9. Update the PR checklist after each pushed commit.
 10. Check only tasks completed and verified by commits already in the PR.
 11. Add newly discovered work as unchecked tasks before implementation.
-12. Keep exactly one leading `WIP: ` through implementation, validation, correction, and independent review.
-13. Remove `WIP: ` immediately before handoff when the change is ready for human review.
-14. Report the human-review-ready PR URL after removing `WIP: `.
+12. Keep a GitHub PR in draft state through implementation, validation, correction, and independent review.
+13. Mark the GitHub PR ready immediately before human-review handoff.
+14. Keep one leading `WIP: ` on Gitea or Forgejo until human-review handoff.
+15. Report the human-review-ready PR URL after updating its progress state.
 
 A request to `continue`, `next`, or `finish` a specific open issue or PR starts an active progress session.
 
 If the repository has no base commit, stop and ask for separate base-initialization authorization.
 
-Merging, closing, deleting, force-pushing, and changing draft state always require explicit current-turn authorization.
+Merging, closing, deleting, and force-pushing always require explicit current-turn authorization.
+Draft-state changes outside an authorized GitHub issue-work lifecycle require explicit current-turn authorization.
 
 ## Post-merge unblock audit
 After a confirmed merge closes or completes an issue:
@@ -40,9 +42,10 @@ After a confirmed merge closes or completes an issue:
 3. Check native tracker dependencies and explicit dependency statements in issue bodies.
 4. Read every remaining dependency and verify its current state.
 5. Report each issue that has no open dependency as unblocked.
-6. Report stale `blocked` labels and differences between native links and issue bodies.
-7. Do not treat an empty native dependency list as authoritative when an issue body names an open dependency.
-8. Do not change labels or dependency links without current-turn approval.
+6. Never add or require a `blocked` label. Native dependency links are authoritative.
+7. Report redundant `blocked` labels and differences between native links and issue bodies.
+8. Do not treat an empty native dependency list as authoritative when an issue body names an open dependency.
+9. Do not change labels or dependency links without current-turn approval.
 
 Complete this audit before post-merge cleanup ends.
 
@@ -57,13 +60,32 @@ A request for exactly one direct commit must satisfy:
 If any check fails, do not commit. Report uncommitted work.
 
 ## Pull-request publication authorization
-A request to create, open, or publish a PR does not by itself authorize issue-work branch creation, implementation commits, or push.
+A request to create, open, or publish a PR for uncommitted code on the base branch authorizes the complete publication workflow:
 
-Keep draft PR rules where supported.
-Treat PR draft state and `WIP: ` title separately.
+1. Inspect the uncommitted code.
+2. Create the required tracker issue.
+3. Read the issue and verify that it is open.
+4. Create and switch to the issue branch without changing the code.
+5. Commit the requested code.
+6. Push the issue branch.
+7. Create the PR.
 
-## WIP title rule
+This authorization applies only to code completed before the request. It does not authorize additional implementation.
+
+Use the hosting platform's progress mechanism.
+
+## PR progress state
 During agent PR work:
+
+### GitHub
+
+- Create a draft PR with a normal title. Never add a `WIP: ` prefix.
+- Keep the PR in draft state during implementation, validation, correction, and independent review.
+- Push completed logical commits so the draft PR shows current progress.
+- Mark the PR ready after implementation, checks, user verification, and independent review are complete.
+- Do not wait for a separate user request to mark it ready at handoff.
+
+### Gitea and Forgejo
 
 - Treat `WIP: ` as the agent progress state.
 - Use multiple logical commits while the title has `WIP: `.
@@ -73,7 +95,6 @@ During agent PR work:
 - If active agent work lacks the prefix, apply one non-duplicated prefix:
   `tea pr edit <number> --title "WIP: <title>"`
 - Remove only the leading `WIP: ` when implementation, checks, user verification, and independent review are complete.
-- Remove the prefix before reporting that the PR is ready for human review.
 - Do not wait for a separate user request to remove the prefix at handoff.
 
 ## Parallel draft workflow
@@ -116,4 +137,4 @@ After a direct commit outside active issue or PR work, end with:
 `Uncommitted: <short summary>. Say "commit" if you want this committed.`
 
 During active issue or PR work, report logical commits, pushes, checklist changes, and residual tasks.
-At human-review handoff, remove `WIP: ` and report the PR URL.
+At human-review handoff, mark a GitHub PR ready or remove `WIP: ` on Gitea and Forgejo. Report the PR URL.
