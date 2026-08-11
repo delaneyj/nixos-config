@@ -180,6 +180,14 @@ t.Cleanup(func() { store.Close() })
 - Use `_` only when Go syntax requires discarding one value from a multi-value assignment or declaration. Do not use it to silence an ignored single return value.
 
 ## Tests
+- Put expected structured output and expected document output in `testdata` golden files.
+- Do not put expected documents, serialized output, or large structured expectations in Go source.
+- Put each independent fixture or golden case in one file.
+- Infer each test name from its fixture path.
+- Discover fixture files in deterministic order.
+- Make each failure identify the fixture path or derived case name.
+- Keep small scalar assertions inline when they do not represent structured output or document output.
+- Follow the stricter project testing skill when both skills apply.
 - For test subprocesses, use `exec.CommandContext(t.Context(), ...)`.
 
 ## Validation
