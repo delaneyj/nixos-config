@@ -110,7 +110,16 @@ let
       {
         config.allowUnfree = true;
       };
-  chromePackage = unstablePkgs.google-chrome;
+  chromePackage = unstablePkgs.google-chrome.override {
+    commandLineArgs = "--enable-features=Vulkan --use-angle=vulkan";
+  };
+  goPackage = unstablePkgs.go_1_27.overrideAttrs {
+    version = "1.27rc3";
+    src = unstablePkgs.fetchurl {
+      url = "https://go.dev/dl/go1.27rc3.src.tar.gz";
+      hash = "sha256-6eIO3RcgCV+RCWluljpmBp0/bUjQDrk4jIiM4GYx31w=";
+    };
+  };
   cosmicScreenshotSaveAndCopy = pkgs.writeShellApplication {
     name = "cosmic-screenshot-save-and-copy";
     runtimeInputs = with pkgs; [
@@ -418,7 +427,7 @@ let
         pkgs.bash
         pkgs.coreutils
         pkgs.git
-        pkgs.go
+        goPackage
         pkgs.templ
       ]
     }:$PATH
@@ -628,7 +637,7 @@ in
     git
     tea
     gnumake
-    go
+    goPackage
     gopls
     ghosttyNoPortal
     chromePackage
