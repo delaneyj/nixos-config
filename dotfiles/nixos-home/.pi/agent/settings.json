@@ -5,6 +5,9 @@
   "defaultThinkingLevel": "medium",
   "hideThinkingBlock": true,
   "theme": "dark",
+  "skills": [
+    "~/repos/stardustdb/agent-skills/skills"
+  ],
   "packages": [
     "npm:pi-work-timer@0.1.0"
   ]
