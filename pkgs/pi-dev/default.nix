@@ -5,17 +5,17 @@
 
 buildNpmPackage {
   pname = "pi-dev";
-  version = "0.84.1";
+  version = "0.84.4";
 
   src = ./.;
-  npmDepsHash = "sha256-k5gRbY5NGVcUj7bgGGJskR03wJWG9TSD0hi93+ETXNM=";
+  npmDepsHash = "sha256-Aad5sMcK11s+J6Xj+pv3B9cqXTMuGzz9UQzJX2ZcCeM=";
   makeCacheWritable = true;
 
   dontNpmBuild = true;
 
   postInstall = ''
     mkdir -p $out/bin
-    ln -s $out/lib/node_modules/pi-dev/node_modules/@earendil-works/pi-coding-agent/dist/cli.js $out/bin/pi
+    ln -s $out/lib/node_modules/pi-dev/node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js $out/bin/pi
   '';
 
   meta = {
