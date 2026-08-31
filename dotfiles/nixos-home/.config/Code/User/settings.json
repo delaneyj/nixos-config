@@ -31,5 +31,9 @@
     }
   },
   "update.mode": "none",
-  "explorer.confirmDragAndDrop": false
+  "explorer.confirmDragAndDrop": false,
+  "chat.byokUtilityModelDefault": "mainAgent",
+  "workbench.secondarySideBar.defaultVisibility": "hidden",
+  "chat.viewSessions.orientation": "stacked",
+  "chat.agent.enabled": false
 }

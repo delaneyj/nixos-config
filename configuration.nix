@@ -111,8 +111,16 @@ let
         config.allowUnfree = true;
       };
   chromePackage = unstablePkgs.google-chrome.override {
-    commandLineArgs = "--enable-features=Vulkan --use-angle=vulkan";
+    commandLineArgs = "--enable-features=WebGPU";
   };
+  tailscalePackage =
+    (import
+      (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/0ae2bc1419c3f345984c2629e72e7a631820fa4d.tar.gz";
+        sha256 = "1nbc2v97aa7za1s9q6p4qjy6zlqmrz8x0kyqbqp28zkgbc6mawxx";
+      })
+      { })
+    .tailscale;
   goPackage = unstablePkgs.go_1_27.overrideAttrs {
     version = "1.27rc3";
     src = unstablePkgs.fetchurl {
@@ -463,7 +471,10 @@ in
 
   # Enable networking
   networking.networkmanager.enable = true;
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    package = tailscalePackage;
+  };
 
   # Keep the time zone synchronized with the machine's current location.
   services.automatic-timezoned.enable = true;
@@ -619,7 +630,7 @@ in
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    btop
+    bottom
     blender
     brotli
     bubblewrap
@@ -641,7 +652,6 @@ in
     gopls
     ghosttyNoPortal
     chromePackage
-    (callPackage ./pkgs/herdr.nix { })
     imagemagick
     impression
     inkscape

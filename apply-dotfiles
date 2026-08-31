@@ -7,48 +7,10 @@ package="nixos-home"
 target_dir="$HOME"
 package_dir="$stow_dir/$package"
 
-sync_pi_skills() {
-  local skills_src="$HOME/.pi/agent/skills"
-  local skills_dst="$package_dir/.pi/agent/skills"
-
-  [[ -d "$skills_src" ]] || return 0
-
-  mkdir -p "$skills_dst"
-
-  local link_target source_path
-  while IFS= read -r -d '' source_path; do
-    link_target="$(readlink -m "$source_path")"
-    if [[ "$link_target" == "$skills_dst/"* ]]; then
-      rm -f "$source_path"
-    fi
-  done < <(find -L "$skills_src" -type l -print0)
-
-  local archive
-  archive="$(mktemp)"
-  if ! (
-    cd "$skills_src"
-    tar --dereference --create --file "$archive" .
-  ); then
-    rm -f "$archive"
-    return 1
-  fi
-
-  if ! (
-    cd "$skills_dst"
-    tar --extract --file "$archive"
-  ); then
-    rm -f "$archive"
-    return 1
-  fi
-  rm -f "$archive"
-}
-
 if [[ ! -d "$package_dir" ]]; then
   echo "missing stow package: $package_dir" >&2
   exit 1
 fi
-
-sync_pi_skills
 
 if [[ -x /run/current-system/sw/bin/stow ]]; then
   stow_bin=/run/current-system/sw/bin/stow

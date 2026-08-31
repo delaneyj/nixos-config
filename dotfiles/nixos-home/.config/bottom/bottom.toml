@@ -1,0 +1,2 @@
+[processes]
+columns = ["PID", "Name", "CPU%", "Mem%", "GMem%", "GPU%", "R/s", "W/s", "State"]

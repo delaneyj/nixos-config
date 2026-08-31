@@ -1,9 +1,9 @@
 {
   "lastChangelogVersion": "0.84.1",
   "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.6-sol",
+  "defaultModel": "gpt-5.6-terra",
   "defaultThinkingLevel": "medium",
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "theme": "dark",
   "packages": [
     "npm:pi-work-timer@0.1.0"
