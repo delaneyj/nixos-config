@@ -653,6 +653,7 @@ in
     bubblewrap
     bun
     clang
+    claudeCodePackage
     cloc
     cmake
     compsize
@@ -660,7 +661,6 @@ in
     cosmicScreenshotSaveAndCopy
     (callPackage ./pkgs/codex.nix { })
     discordPackage
-    claudeCodePackage
     gcc
     gh
     git
