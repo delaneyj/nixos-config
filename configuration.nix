@@ -113,6 +113,16 @@ let
   chromePackage = unstablePkgs.google-chrome.override {
     commandLineArgs = "--enable-features=WebGPU";
   };
+  claudeCodePackage =
+    (import
+      (builtins.fetchTarball {
+        url = "https://github.com/NixOS/nixpkgs/archive/4975466d324710c576dc11ad614684e6bd8cad8e.tar.gz";
+        sha256 = "1if9h4d8rkgd7a41j978swbixif81iqfd7hk302w0fbd23i9g7y4";
+      })
+      {
+        config.allowUnfree = true;
+      })
+    .claude-code;
   tailscalePackage =
     (import
       (builtins.fetchTarball {
@@ -643,6 +653,7 @@ in
     cosmicScreenshotSaveAndCopy
     (callPackage ./pkgs/codex.nix { })
     discordPackage
+    claudeCodePackage
     gcc
     gh
     git
