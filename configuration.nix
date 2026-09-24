@@ -132,10 +132,10 @@ let
       { })
     .tailscale;
   goPackage = unstablePkgs.go_1_27.overrideAttrs {
-    version = "1.27rc3";
+    version = "1.27.1";
     src = unstablePkgs.fetchurl {
-      url = "https://go.dev/dl/go1.27rc3.src.tar.gz";
-      hash = "sha256-6eIO3RcgCV+RCWluljpmBp0/bUjQDrk4jIiM4GYx31w=";
+      url = "https://go.dev/dl/go1.27.1.src.tar.gz";
+      hash = "sha256-TkCKuuEm2Ra2FkYnGT8sVPDjyhMS1pO4bbRfhiqyOLE=";
     };
   };
   cosmicScreenshotSaveAndCopy = pkgs.writeShellApplication {
