@@ -692,6 +692,7 @@ in
     python313Packages.huggingface-hub
     ripgrep
     rtk
+    unstablePkgs.signal-desktop
     slack
     spotify
     sqlite
