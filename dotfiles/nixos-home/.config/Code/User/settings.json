@@ -35,5 +35,9 @@
   "chat.byokUtilityModelDefault": "mainAgent",
   "workbench.secondarySideBar.defaultVisibility": "hidden",
   "chat.viewSessions.orientation": "stacked",
-  "chat.agent.enabled": false
+  "chat.agent.enabled": false,
+  "git.enableSmartCommit": true,
+  "explorer.sortOrderLexicographicOptions": "unicode",
+  "stardust.maxPerPage": 8,
+  "stardust.prettyPrintDates": "utc"
 }

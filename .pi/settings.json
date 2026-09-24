@@ -1,1 +1,5 @@
-{}
+{
+  "skills": [
+    "~/repos/stardustdb/agent-skills/skills"
+  ]
+}
