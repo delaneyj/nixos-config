@@ -38,6 +38,6 @@
   "chat.agent.enabled": false,
   "git.enableSmartCommit": true,
   "explorer.sortOrderLexicographicOptions": "unicode",
-  "stardust.maxPerPage": 8,
+  "stardust.maxPerPage": 10,
   "stardust.prettyPrintDates": "utc"
 }
