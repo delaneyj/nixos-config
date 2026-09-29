@@ -1,4 +1,14 @@
 if status is-interactive
+    # nix develop can leave an interactive shell with temporary paths that
+    # disappear when the parent Nix invocation exits. Use the normal /tmp for
+    # subsequent commands, including another nix develop.
+    for temp_var in TMPDIR TMP TEMP
+        set -l temp_value $$temp_var
+        if string match -q '/tmp/nix-shell.*' -- "$temp_value"
+            set -e $temp_var
+        end
+    end
+
     set -l gcr_sock "/run/user/"(id -u)"/gcr/ssh"
 
     if test -S $gcr_sock
