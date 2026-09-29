@@ -2,7 +2,7 @@
 
 stdenvNoCC.mkDerivation rec {
   pname = "codex";
-  version = "0.157.0";
+  version = "0.158.0";
 
   # The full "package" layout (bin/codex, codex-package.json, codex-path/,
   # codex-resources/) is required: since the app-server-daemon release line,
@@ -11,7 +11,7 @@ stdenvNoCC.mkDerivation rec {
   # upstream install.sh extracts, including the top-level `codex` symlink.
   src = fetchurl {
     url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-package-x86_64-unknown-linux-musl.tar.gz";
-    hash = "sha256-BC+FHqP8EIPEUVdSBSCUT8eQYytT68WA/JjqylWGKiU=";
+    hash = "sha256-szzUJsmsq5s0xakyALpP6DyOYUwYzl71KyvzZAi44Yw=";
   };
 
   dontConfigure = true;

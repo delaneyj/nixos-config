@@ -5,13 +5,16 @@
 
 buildNpmPackage {
   pname = "pi-dev";
-  version = "0.85.1";
+  version = "0.87.1";
 
   src = ./.;
-  npmDepsHash = "sha256-04LVwHBO//+f9gze1IoHV1Wr94pkVom4wjKzgtaOmko=";
+  npmDepsHash = "sha256-Bf0lbbCdCbLaJrYQBSnK7F3fH9EmhSlu++MY1TKwt2s=";
   makeCacheWritable = true;
 
   dontNpmBuild = true;
+  # npm prune crashes on the published shrinkwrap ("from" argument undefined);
+  # there are no devDependencies to prune anyway.
+  dontNpmPrune = true;
 
   postInstall = ''
     mkdir -p $out/bin

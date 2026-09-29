@@ -116,8 +116,8 @@ let
   claudeCodePackage =
     (import
       (builtins.fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/7278ed3e4560aa39b95f1acd8aacafa4559efc6b.tar.gz";
-        sha256 = "016wgcpv2k1ymnq0zb3n850jgi49p0fvgcnfh87z1rmml04sxa64";
+        url = "https://github.com/NixOS/nixpkgs/archive/ab69ce2ec3ac9801484a346a3f7062aba2be1eff.tar.gz";
+        sha256 = "1l5n2zg5hch1s7l3nbf4v0j5w6zhm6xfyhs001vwqgl13ih050ka";
       })
       {
         config.allowUnfree = true;
