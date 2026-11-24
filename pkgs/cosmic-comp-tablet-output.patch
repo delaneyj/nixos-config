@@ -1,0 +1,74 @@
+--- a/src/input/mod.rs
++++ b/src/input/mod.rs
+@@ -1506,8 +1506,7 @@
+                         (output, position)
+                     } else {
+                         let Some(output) =
+-                            mapped_output_for_device(&self.common.config, &shell, &event.device())
+-                                .cloned()
++                            mapped_output_for_device(&self.common.config, &shell, &seat, &event.device())
+                         else {
+                             return;
+                         };
+@@ -1572,8 +1571,7 @@
+                         (output, position)
+                     } else {
+                         let Some(output) =
+-                            mapped_output_for_device(&self.common.config, &shell, &event.device())
+-                                .cloned()
++                            mapped_output_for_device(&self.common.config, &shell, &seat, &event.device())
+                         else {
+                             return;
+                         };
+@@ -1664,8 +1662,7 @@
+                     self.common.idle_notifier_state.notify_activity(&seat);
+                     notify_cursor_activity(self, &seat, PointerEventKind::Motion);
+                     let Some(output) =
+-                        mapped_output_for_device(&self.common.config, &shell, &event.device())
+-                            .cloned()
++                        mapped_output_for_device(&self.common.config, &shell, &seat, &event.device())
+                     else {
+                         return;
+                     };
+@@ -1768,8 +1765,7 @@
+                     self.common.idle_notifier_state.notify_activity(&seat);
+                     notify_cursor_activity(self, &seat, PointerEventKind::Motion);
+                     let Some(output) =
+-                        mapped_output_for_device(&self.common.config, &shell, &event.device())
+-                            .cloned()
++                        mapped_output_for_device(&self.common.config, &shell, &seat, &event.device())
+                     else {
+                         return;
+                     };
+@@ -3251,19 +3247,27 @@
+ 
+ // TODO Is it possible to determine mapping for external touchscreen?
+ // Support map_to_region like sway?
+-fn mapped_output_for_device<'a, D: Device + 'static>(
++fn mapped_output_for_device<D: Device + 'static>(
+     config: &Config,
+-    shell: &'a Shell,
++    shell: &Shell,
++    seat: &Seat<State>,
+     device: &D,
+-) -> Option<&'a Output> {
++) -> Option<Output> {
+     let map_to_output = if let Some(device) = <dyn Any>::downcast_ref::<InputDevice>(device) {
+         config
+             .map_to_output(device)
+             .and_then(|name| shell.outputs().find(|output| output.name() == name))
++            .cloned()
+     } else {
+         None
+     };
+-    map_to_output.or_else(|| shell.builtin_output())
++    map_to_output.or_else(|| {
++        if device.has_capability(DeviceCapability::TabletTool) {
++            Some(seat.focused_or_active_output())
++        } else {
++            shell.builtin_output().cloned()
++        }
++    })
+ }
+ 
+ pub fn update_output_image_copy_cursor_position(

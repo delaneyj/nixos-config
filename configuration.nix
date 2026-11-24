@@ -2,10 +2,14 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running 'nixos-help').
 
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
-  lib = pkgs.lib;
   whisperBaseEnModel = pkgs.fetchurl {
     url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
     hash = "sha256-oDd5yG3zMjB19eeWyyzlAp8A7Ihp7uP9+4l6/jbG0AI=";
@@ -15,7 +19,7 @@ let
     name = "terminal-dictate";
     runtimeInputs = with pkgs; [
       coreutils
-      ffmpeg
+      updatedPkgs.ffmpeg
       gnused
       whisper-cpp
       wl-clipboard
@@ -50,7 +54,7 @@ let
     name = "terminal-dictate-toggle";
     runtimeInputs = with pkgs; [
       coreutils
-      ffmpeg
+      updatedPkgs.ffmpeg
       gnused
       procps
       whisper-cpp
@@ -110,27 +114,19 @@ let
       {
         config.allowUnfree = true;
       };
-  chromePackage = unstablePkgs.google-chrome.override {
+  updatedPkgs = import ./pkgs/updated.nix { };
+  updatedOpenSSL =
+    (import (builtins.fetchTarball {
+      url = "https://github.com/NixOS/nixpkgs/archive/ac588ef1c914865dad517b337ea0eb9694a4021c.tar.gz";
+      sha256 = "1sxd2sqlpy1bx6b5xiwy1pbyygazl9d1a5yy0rvqfsihqpcibq2y";
+    }) { config.allowUnfree = true; }).openssl;
+  chromePackage = updatedPkgs.callPackage ./pkgs/chrome.nix {
     commandLineArgs = "--enable-features=WebGPU";
   };
-  claudeCodePackage =
-    (import
-      (builtins.fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/ab69ce2ec3ac9801484a346a3f7062aba2be1eff.tar.gz";
-        sha256 = "1l5n2zg5hch1s7l3nbf4v0j5w6zhm6xfyhs001vwqgl13ih050ka";
-      })
-      {
-        config.allowUnfree = true;
-      })
-    .claude-code;
-  tailscalePackage =
-    (import
-      (builtins.fetchTarball {
-        url = "https://github.com/NixOS/nixpkgs/archive/0ae2bc1419c3f345984c2629e72e7a631820fa4d.tar.gz";
-        sha256 = "1nbc2v97aa7za1s9q6p4qjy6zlqmrz8x0kyqbqp28zkgbc6mawxx";
-      })
-      { })
-    .tailscale;
+  claudeCodePackage = updatedPkgs.claude-code.override {
+    manifest = builtins.fromJSON (builtins.readFile ./pkgs/claude-code-manifest.json);
+  };
+  tailscalePackage = updatedPkgs.callPackage ./pkgs/tailscale.nix { };
   goPackage = unstablePkgs.go_1_27.overrideAttrs {
     version = "1.27.1";
     src = unstablePkgs.fetchurl {
@@ -203,7 +199,7 @@ let
               zoom_url="$zoom_url&pwd=$password"
             fi
 
-            exec ${lib.getExe pkgs.zoom-us} "$zoom_url"
+            exec ${lib.getExe updatedPkgs.zoom-us} "$zoom_url"
           fi
           ;;
       esac
@@ -244,16 +240,16 @@ let
     name = "ghostty";
     text = ''
       export GTK_USE_PORTAL=0
-      exec ${lib.getExe pkgs.ghostty} "$@"
+      exec ${lib.getExe updatedPkgs.ghostty} "$@"
     '';
   };
 
   discordPackage =
-    pkgs.runCommand "discord-browser-aware-${lib.getVersion pkgs.discord}"
+    pkgs.runCommand "discord-browser-aware-${lib.getVersion updatedPkgs.discord}"
       { nativeBuildInputs = [ pkgs.makeWrapper ]; }
       ''
         mkdir -p "$out"
-        cp -aL ${pkgs.discord}/. "$out/"
+        cp -aL ${updatedPkgs.discord}/. "$out/"
         chmod -R u+w "$out"
 
         wrapProgram "$out/bin/Discord" \
@@ -283,38 +279,54 @@ let
       '';
 
   cosCli = pkgs.callPackage ./pkgs/cos-cli.nix { };
-  piDev = unstablePkgs.callPackage ./pkgs/pi-dev { };
-  rtk = pkgs.callPackage ./pkgs/rtk.nix { };
-  llamaCppVulkan = unstablePkgs.llama-cpp.override {
+  piDev = updatedPkgs.callPackage ./pkgs/pi-dev { };
+  rtk = updatedPkgs.callPackage ./pkgs/rtk.nix { };
+  llamaCppVulkan = updatedPkgs.llama-cpp.override {
     vulkanSupport = true;
   };
   stableDiffusionCppVulkan = unstablePkgs.stable-diffusion-cpp-vulkan;
-  vscodePackageRaw = unstablePkgs.vscode.overrideAttrs (_old: {
-    version = "1.128.0";
-    src = unstablePkgs.fetchurl {
-      name = "VSCode_1.128.0_linux-x64.tar.gz";
-      url = "https://update.code.visualstudio.com/1.128.0/linux-x64/stable";
-      hash = "sha256-qbTOl07MEMdFbamHl2O/CnpDJxC9JslaiaihaPKv9Xs=";
+  vscodePackageRaw = updatedPkgs.vscode.overrideAttrs (_old: {
+    version = "1.146.0";
+    src = updatedPkgs.fetchurl {
+      name = "VSCode_1.146.0_linux-x64.tar.gz";
+      url = "https://update.code.visualstudio.com/1.146.0/linux-x64/stable";
+      hash = "sha256-y9t73j01jHKXzx2datwW37HQF5UB+ywVLfSFk+OeNgA=";
     };
   });
-  vscodePackageBase = unstablePkgs.vscode-with-extensions.override {
+  updateExtension =
+    extension: version: hash:
+    extension.overrideAttrs (_: {
+      inherit version;
+      src = updatedPkgs.vscode-utils.fetchVsixFromVscodeMarketplace {
+        name = extension.vscodeExtName;
+        publisher = extension.vscodeExtPublisher;
+        inherit version hash;
+      };
+    });
+  vscodePackageBase = updatedPkgs.vscode-with-extensions.override {
     vscode = vscodePackageRaw;
     vscodeExtensions = [
-      unstablePkgs.vscode-extensions.jdinhlife.gruvbox
-      unstablePkgs.vscode-extensions.golang.go
-      unstablePkgs.vscode-extensions.mhutchie.git-graph
-      unstablePkgs.vscode-extensions.waderyan.gitblame
-      unstablePkgs.vscode-extensions.biomejs.biome
-      unstablePkgs.vscode-extensions.arrterian.nix-env-selector
-      unstablePkgs.vscode-extensions.jnoortheen.nix-ide
-      unstablePkgs.vscode-extensions.mkhl.direnv
+      (updateExtension updatedPkgs.vscode-extensions.jdinhlife.gruvbox "1.29.2"
+        "sha256-Rq4W+LosISUu4d7wf7djVI0VnX1kdLXKUB5BbGZQr+k="
+      )
+      updatedPkgs.vscode-extensions.golang.go
+      updatedPkgs.vscode-extensions.mhutchie.git-graph
+      updatedPkgs.vscode-extensions.waderyan.gitblame
+      (updateExtension updatedPkgs.vscode-extensions.biomejs.biome "2026.11.20920"
+        "sha256-XPaH1ej+EnlZ3WAyXu6LPdXOPaZ8lE+YTVLKpkkVpd8="
+      )
+      (updateExtension updatedPkgs.vscode-extensions.arrterian.nix-env-selector "1.3.2"
+        "sha256-bEvSaA1pUNmz7LCScsqE0SXVMtcF7PaXO4kuoZyIryg="
+      )
+      updatedPkgs.vscode-extensions.jnoortheen.nix-ide
+      updatedPkgs.vscode-extensions.mkhl.direnv
     ]
-    ++ unstablePkgs.vscode-utils.extensionsFromVscodeMarketplace [
+    ++ updatedPkgs.vscode-utils.extensionsFromVscodeMarketplace [
       {
         name = "protobuf-vsc";
         publisher = "DrBlury";
-        version = "1.6.6";
-        sha256 = "uMyxdLptaLZBlLEugvYQgJTZCtysmnZix9faXsQfHGk=";
+        version = "1.6.19";
+        sha256 = "sha256-5+kJGIFJuvgL03UCfK0Bh9R/CB6ZzMgT939khSiBi/w=";
       }
       {
         name = "templ";
@@ -325,8 +337,8 @@ let
       {
         name = "vscode-pull-request-github";
         publisher = "GitHub";
-        version = "0.157.2026071304";
-        sha256 = "2A4IM9EzAk8I4UV1OP8ecM25Km6mHfRS4UK9L2Dj1Rw=";
+        version = "0.179.2026111104";
+        sha256 = "sha256-GQTWMV+su/uxDzcvv4kNW8+DY4iFAdzDqQj3vCepHR8=";
       }
       {
         name = "copilot-chat";
@@ -509,6 +521,15 @@ in
     libwacom
   ];
 
+  nixpkgs.overlays = lib.mkBefore [
+    (
+      _final: _prev:
+      lib.genAttrs (builtins.filter (
+        name: lib.hasPrefix "cosmic-" name || name == "xdg-desktop-portal-cosmic"
+      ) (builtins.attrNames updatedPkgs)) (name: updatedPkgs.${name})
+    )
+  ];
+
   services.displayManager.cosmic-greeter.enable = true;
   services.desktopManager.cosmic.enable = true;
 
@@ -595,7 +616,7 @@ in
       "networkmanager"
       "wheel"
     ];
-    shell = pkgs.fish;
+    shell = config.programs.fish.package;
     packages = with pkgs; [
       #  thunderbird
     ];
@@ -603,12 +624,18 @@ in
 
   # Install firefox.
   programs.firefox.enable = true;
+  programs.firefox.package = updatedPkgs.firefox;
   programs.fish.enable = true;
+  programs.fish.package = updatedPkgs.fish;
+  # Fish 4.9 generates completions with its embedded tools on first use.
+  programs.fish.generateCompletions = false;
   programs.git.enable = true;
+  programs.git.package = updatedPkgs.git;
 
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
+    nix-direnv.package = updatedPkgs.nix-direnv.override { nix = config.nix.package; };
   };
 
   # Allow unfree packages
@@ -647,14 +674,15 @@ in
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    (lib.hiPrio updatedPkgs.curl)
     bottom
-    blender
-    brotli
+    updatedPkgs.blender
+    updatedPkgs.brotli
     bubblewrap
     bun
     clang
     claudeCodePackage
-    cloc
+    updatedPkgs.cloc
     cmake
     compsize
     cosCli
@@ -663,54 +691,54 @@ in
     discordPackage
     gcc
     gh
-    git
-    tea
+    updatedPkgs.git
+    (callPackage ./pkgs/tea.nix { })
     gnumake
     goPackage
-    gopls
+    updatedPkgs.gopls
     ghosttyNoPortal
     chromePackage
     imagemagick
     impression
     inkscape
-    jq
-    krita
+    updatedPkgs.jq
+    updatedPkgs.krita
     libwacom
     llamaCppVulkan
     nats-server
     natscli
-    ngrok
-    nixfmt
+    updatedPkgs.ngrok
+    updatedPkgs.nixfmt
     nodejs
-    obs-studio
-    openssl
+    updatedPkgs.obs-studio
+    updatedOpenSSL
     pciutils
     piDev
     pulseaudio
     pv
-    python3
+    updatedPkgs.python3
     python313Packages.huggingface-hub
     ripgrep
     rtk
     unstablePkgs.signal-desktop
-    slack
-    spotify
-    sqlite
+    updatedPkgs.slack
+    updatedPkgs.spotify
+    updatedPkgs.sqlite
     sqlitebrowser
     stableDiffusionCppVulkan
     stow
     system-config-printer
-    templ
+    updatedPkgs.templ
     terminalDictate
     terminalDictateToggle
-    upx
+    updatedPkgs.upx
     usbutils
-    vlc
+    updatedPkgs.vlc
     vulkan-tools
     vscodePackage
     wl-clipboard
     wtype
-    zoom-us
+    updatedPkgs.zoom-us
     zoomAwareBrowserDesktop
     zstd
     config.boot.zfs.package

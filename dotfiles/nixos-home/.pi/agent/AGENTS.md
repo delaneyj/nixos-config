@@ -30,3 +30,4 @@
 - Tests do not count as production use. Export does not justify one use.
 - Inline or localize each package-level declaration with one production use.
 - Use the project development shell for authenticated network commands when it provides authentication or tooling.
+- Use `fj` for tracker work on `git.bitflip.ai`. Do not use `tea`.

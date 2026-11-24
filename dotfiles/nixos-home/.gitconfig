@@ -7,6 +7,7 @@
 [user]
 	name = Delaney Gillilan
 	email = delaneygillilan@gmail.com
+	signingkey = /home/delaney/.ssh/id_ed25519_bitflip.pub
 [credential "https://git.stellarcorps.dev"]
 	helper =
 	helper = !tea login helper
@@ -16,3 +17,7 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !/run/current-system/sw/bin/gh auth git-credential
+[core]
+	hooksPath = /home/delaney/.config/git/hooks
+[gpg]
+	format = ssh

@@ -47,7 +47,12 @@ if status is-interactive
         end
 
         if command -v nix >/dev/null
-            exec nix develop "$PWD" --command fish
+            set -l project "$PWD"
+            if test -f "$PWD/flake.nix"; and not command git -C "$PWD" ls-files --error-unmatch -- flake.nix >/dev/null 2>&1
+                set project "path:$PWD"
+            end
+
+            nix develop "$project" --command fish
         end
     end
 
